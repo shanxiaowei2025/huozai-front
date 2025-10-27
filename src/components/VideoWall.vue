@@ -42,7 +42,7 @@
         可用滚轮或方向键翻页
       </span>
       
-      <!-- 双击全屏提示 -->
+      <!-- 双击全屏提示（移到最右侧） -->
       <span class="fullscreen-tip">
         <span class="tip-icon">💡</span>
         双击视频可全屏查看
@@ -549,6 +549,7 @@ onUnmounted(() => {
   white-space: nowrap;
   transition: all 0.3s ease;
   animation: pulse 2s ease-in-out infinite;
+  height: 32px;
 }
 
 .pagination-tip:hover {
@@ -560,6 +561,7 @@ onUnmounted(() => {
 
 /* 全屏提示 */
 .fullscreen-tip {
+  margin-left: auto;
   margin-right: 20px;
   padding: 6px 14px;
   background: rgba(139, 92, 246, 0.15);
@@ -574,6 +576,7 @@ onUnmounted(() => {
   animation: pulse-tip 2s ease-in-out infinite;
   transition: all 0.3s ease;
   cursor: default;
+  height: 32px;
 }
 
 .fullscreen-tip:hover {
@@ -617,6 +620,7 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 246, 255, 0.2);
   border-radius: 8px;
   backdrop-filter: blur(10px);
+  height: 32px;
 }
 
 .page-btn-inline {
@@ -630,6 +634,9 @@ onUnmounted(() => {
   font-weight: bold;
   transition: all 0.3s ease;
   white-space: nowrap;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .page-btn-inline:hover:not(:disabled) {
@@ -676,7 +683,7 @@ onUnmounted(() => {
 
 /* 控制按钮组 */
 .controls {
-  margin-left: auto;
+  margin-left: 0;
   display: flex;
   gap: 8px;
 }
