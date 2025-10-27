@@ -47,6 +47,7 @@
         <span class="community-icon">🏘️</span>
         <span>{{ community.name }}</span>
         <span class="camera-count">{{ community.cameraCount }}个</span>
+        <span v-if="community.distance" class="distance-badge">{{ (community.distance / 1000).toFixed(1) }}km</span>
       </button>
     </div>
 
@@ -272,42 +273,39 @@ const updateCurrentTime = () => {
 // 时间更新定时器
 let timeInterval = null
 
-// 从百度地图 API 加载小区数据
+// 从百度地图 API 加载小区数据（仅定兴县城区）
 const loadCommunities = async () => {
   loading.value = true
   error.value = null
   
   try {
-    // 方法1：按城市搜索小区
-    const result = await searchCommunities({
-      city: '定兴县',
-      query: '小区',
-      pageSize: 20
+    // 使用附近搜索，限制在定兴县城区范围内
+    // 定兴县城区中心坐标：经度 115.808，纬度 39.267
+    // 搜索半径：5000米（5公里），覆盖城区主要区域
+    const result = await searchNearbyCommunities({
+      lng: 115.808,      // 定兴县城区中心经度
+      lat: 39.267,       // 定兴县城区中心纬度
+      radius: 5000,      // 搜索半径5公里，仅限城区
+      pageSize: 20       // 最多返回20个小区
     })
-    
-    // 方法2：搜索附近的小区（备选）
-    // const result = await searchNearbyCommunities({
-    //   lng: 115.808,
-    //   lat: 39.267,
-    //   radius: 10000,
-    //   pageSize: 20
-    // })
     
     if (result && result.length > 0) {
       communities.value = result
       // 默认选中第一个小区
       selectedCommunity.value = result[0].id
       
-      console.log('✅ 成功加载小区数据：', result)
+      console.log('✅ 成功加载定兴县城区小区数据：', result.length, '个小区')
+      console.log('📍 搜索范围：城区中心5公里半径内', result)
       
       // 为每个小区生成模拟摄像头数据
       generateCamerasForCommunities(result)
     } else {
       // 如果 API 没有返回结果，使用备用数据
+      console.warn('⚠️ 百度地图未返回城区小区数据，使用备用数据')
       useFallbackData()
     }
   } catch (err) {
-    console.error('❌ 加载小区数据失败：', err)
+    console.error('❌ 加载定兴县城区小区数据失败：', err)
     error.value = err.message
     // 使用备用数据
     useFallbackData()
@@ -507,6 +505,23 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* 距离标签 */
+.distance-badge {
+  padding: 2px 6px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 10px;
+  font-size: 10px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.community-btn.active .distance-badge {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
 /* 加载和错误提示 */
 .loading-message,
 .error-message {
@@ -553,26 +568,26 @@ onUnmounted(() => {
   display: grid;
   gap: 12px;
   overflow: hidden;
-  align-content: start;
   padding-right: 8px;
+  min-height: 0; /* 重要：允许flex子项缩小 */
 }
 
-/* 9分屏：3列，自动行 */
+/* 9分屏：3x3网格 */
 .grid-9 {
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(200px, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 
-/* 16分屏：4列，自动行 */
+/* 16分屏：4x4网格 */
 .grid-16 {
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(150px, 1fr);
+  grid-template-rows: repeat(4, 1fr);
 }
 
-/* 25分屏：5列，自动行 */
+/* 25分屏：5x5网格 */
 .grid-25 {
   grid-template-columns: repeat(5, 1fr);
-  grid-auto-rows: minmax(120px, 1fr);
+  grid-template-rows: repeat(5, 1fr);
 }
 
 /* 单个视频项 */
