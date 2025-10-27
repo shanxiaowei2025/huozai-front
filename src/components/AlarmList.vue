@@ -194,22 +194,54 @@ import { ref, onMounted, onUnmounted, watch, inject, computed } from 'vue'
 const realLocations = ref([])
 const isLoadingLocations = ref(false)
 
-// 备用的定兴县地点数据（当API无法获取真实数据时使用）
+// 备用的定兴县城区地点数据（当API无法获取真实数据时使用）
+// 所有地点均在县中心3公里范围内
 const fallbackLocations = [
-  { name: '定兴县政府家属院', address: '河北省保定市定兴县', point: { lng: 115.808, lat: 39.267 } },
-  { name: '定兴县人民医院家属楼', address: '河北省保定市定兴县', point: { lng: 115.810, lat: 39.268 } },
-  { name: '定兴县实验中学家属区', address: '河北省保定市定兴县', point: { lng: 115.806, lat: 39.266 } },
-  { name: '定兴县水岸花园', address: '河北省保定市定兴县', point: { lng: 115.812, lat: 39.269 } },
-  { name: '定兴县阳光小区', address: '河北省保定市定兴县', point: { lng: 115.805, lat: 39.265 } },
-  { name: '定兴县锦绣家园', address: '河北省保定市定兴县', point: { lng: 115.815, lat: 39.270 } },
-  { name: '定兴县幸福里小区', address: '河北省保定市定兴县', point: { lng: 115.803, lat: 39.264 } },
-  { name: '定兴县书香苑', address: '河北省保定市定兴县', point: { lng: 115.818, lat: 39.271 } }
+  { name: '定兴县政府家属院', address: '河北省保定市定兴县', point: { lng: 115.808, lat: 39.267 } }, // 县中心
+  { name: '定兴县人民医院家属楼', address: '河北省保定市定兴县', point: { lng: 115.810, lat: 39.268 } }, // 0.2km
+  { name: '定兴县实验中学家属区', address: '河北省保定市定兴县', point: { lng: 115.806, lat: 39.266 } }, // 0.2km
+  { name: '定兴县水岸花园', address: '河北省保定市定兴县', point: { lng: 115.812, lat: 39.269 } }, // 0.5km
+  { name: '定兴县阳光小区', address: '河北省保定市定兴县', point: { lng: 115.805, lat: 39.265 } }, // 0.4km
+  { name: '定兴县锦绣家园', address: '河北省保定市定兴县', point: { lng: 115.815, lat: 39.270 } }, // 0.8km
+  { name: '定兴县幸福里小区', address: '河北省保定市定兴县', point: { lng: 115.803, lat: 39.264 } }, // 0.6km
+  { name: '定兴县书香苑', address: '河北省保定市定兴县', point: { lng: 115.818, lat: 39.271 } }, // 1.2km
+  { name: '定兴县金色家园', address: '河北省保定市定兴县', point: { lng: 115.810, lat: 39.265 } }, // 0.3km
+  { name: '定兴县世纪花园', address: '河北省保定市定兴县', point: { lng: 115.805, lat: 39.268 } }, // 0.3km
+  { name: '定兴县银河小区', address: '河北省保定市定兴县', point: { lng: 115.813, lat: 39.266 } }, // 0.5km
+  { name: '定兴县文苑小区', address: '河北省保定市定兴县', point: { lng: 115.807, lat: 39.270 } }, // 0.3km
+  { name: '定兴县康泰家园', address: '河北省保定市定兴县', point: { lng: 115.811, lat: 39.264 } }, // 0.4km
+  { name: '定兴县福临门小区', address: '河北省保定市定兴县', point: { lng: 115.804, lat: 39.269 } }, // 0.5km
+  { name: '定兴县盛世华庭', address: '河北省保定市定兴县', point: { lng: 115.816, lat: 39.268 } }, // 0.9km
+  { name: '定兴县龙凤城', address: '河北省保定市定兴县', point: { lng: 115.809, lat: 39.263 } } // 0.5km
 ]
 
 // 注入报警数据共享机制
 const alarmData = inject('alarmData', null)
 
-// 获取定兴县周边的真实地点（小区、住宅楼等）
+// 定兴县城区中心坐标
+const DINGXING_CENTER = { lng: 115.808, lat: 39.267 }
+// 定兴县城区范围半径（公里）
+const CITY_RADIUS_KM = 3
+
+// 计算两点之间的距离（公里）
+const calculateDistance = (point1, point2) => {
+  const radLat1 = point1.lat * Math.PI / 180
+  const radLat2 = point2.lat * Math.PI / 180
+  const a = radLat1 - radLat2
+  const b = point1.lng * Math.PI / 180 - point2.lng * Math.PI / 180
+  const s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a/2), 2) + 
+    Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b/2), 2)))
+  return s * 6378.137 // 地球半径 6378.137km
+}
+
+// 判断是否在定兴县城区范围内
+const isInCityArea = (point) => {
+  if (!point || !point.lng || !point.lat) return false
+  const distance = calculateDistance(DINGXING_CENTER, point)
+  return distance <= CITY_RADIUS_KM
+}
+
+// 获取定兴县城区的真实地点（小区、住宅楼等）
 const fetchRealLocations = async () => {
   if (typeof BMap === 'undefined') {
     console.error('百度地图API未加载')
@@ -242,6 +274,12 @@ const fetchRealLocations = async () => {
                   continue // 跳过非定兴县的地址
                 }
                 
+                // 🎯 新增：只保留城区范围内的小区（距离县中心3公里以内）
+                if (!isInCityArea(poi.point)) {
+                  console.log(`⏭️ 跳过非城区地点: ${poi.title} (距离: ${calculateDistance(DINGXING_CENTER, poi.point).toFixed(2)}km)`)
+                  continue
+                }
+                
                 // 避免重复添加
                 const isDuplicate = allLocations.some(loc => 
                   loc.name === poi.title && loc.address === poi.address
@@ -252,7 +290,8 @@ const fetchRealLocations = async () => {
                     name: poi.title,
                     address: poi.address,
                     point: poi.point,
-                    keyword: keyword
+                    keyword: keyword,
+                    distance: calculateDistance(DINGXING_CENTER, poi.point)
                   })
                 }
               }
@@ -262,21 +301,23 @@ const fetchRealLocations = async () => {
           // 所有搜索完成后更新数据
           if (completedSearches === searchKeywords.length) {
             realLocations.value = allLocations
-            console.log(`✅ 成功获取定兴县真实地点：${allLocations.length} 个`)
+            console.log(`✅ 成功获取定兴县城区小区：${allLocations.length} 个`)
             console.log('📋 地点来源:', searchKeywords.join(', '))
+            console.log(`🎯 筛选条件：距离县中心 ${CITY_RADIUS_KM}km 以内`)
             
             // 显示前5个地点的详细信息作为示例
             if (allLocations.length > 0) {
-              console.log('📍 定兴县示例地点（前5个）:')
+              console.log('📍 定兴县城区小区（前5个）:')
               allLocations.slice(0, 5).forEach((loc, index) => {
                 console.log(`  ${index + 1}. ${loc.name}`)
                 console.log(`     地址: ${loc.address}`)
                 if (loc.point) {
                   console.log(`     坐标: ${loc.point.lng.toFixed(6)}, ${loc.point.lat.toFixed(6)}`)
+                  console.log(`     距离县中心: ${loc.distance.toFixed(2)}km`)
                 }
               })
             } else {
-              console.warn('⚠️ 未找到定兴县的地点数据，使用备用方案')
+              console.warn('⚠️ 未找到定兴县城区的地点数据，使用备用方案')
               // 使用备用地点数据
               realLocations.value = fallbackLocations
               console.log('📍 已加载备用定兴县地点数据:', fallbackLocations.length, '个')
