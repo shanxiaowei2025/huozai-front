@@ -8,6 +8,34 @@
         实时视频监控（{{ splitMode }}分屏）
       </span>
       
+      <!-- 分页控制（移到标题栏右侧） -->
+      <div v-if="totalPages > 1" class="pagination-inline">
+        <button 
+          @click="prevPage" 
+          :disabled="currentPage === 1"
+          class="page-btn-inline"
+          title="快捷键: ← 左箭头"
+        >
+          ◀ 上一页
+        </button>
+        
+        <div class="page-info-inline">
+          <span class="page-number">{{ currentPage }}</span>
+          <span class="page-divider">/</span>
+          <span class="page-total">{{ totalPages }}</span>
+          <span class="camera-info">（共 {{ communityVideos.length }} 个摄像头）</span>
+        </div>
+        
+        <button 
+          @click="nextPage" 
+          :disabled="currentPage === totalPages"
+          class="page-btn-inline"
+          title="快捷键: → 右箭头"
+        >
+          下一页 ▶
+        </button>
+      </div>
+      
       <!-- 翻页提示（仅在有多页时显示） -->
       <span v-if="totalPages > 1" class="pagination-tip">
         <span class="tip-icon">💡</span>
@@ -60,34 +88,6 @@
         <span>{{ community.name }}</span>
         <span class="camera-count">{{ community.cameraCount }}个</span>
         <span v-if="community.distance" class="distance-badge"></span>
-      </button>
-    </div>
-
-    <!-- 翻页控制栏 -->
-    <div v-if="totalPages > 1" class="pagination-bar">
-      <button 
-        @click="prevPage" 
-        :disabled="currentPage === 1"
-        class="page-btn"
-        title="快捷键: ← 左箭头"
-      >
-        ◀ 上一页
-      </button>
-      
-      <div class="page-info">
-        <span class="page-number">{{ currentPage }}</span>
-        <span class="page-divider">/</span>
-        <span class="page-total">{{ totalPages }}</span>
-        <span class="camera-info">（共 {{ communityVideos.length }} 个摄像头）</span>
-      </div>
-      
-      <button 
-        @click="nextPage" 
-        :disabled="currentPage === totalPages"
-        class="page-btn"
-        title="快捷键: → 右箭头"
-      >
-        下一页 ▶
       </button>
     </div>
 
@@ -607,6 +607,74 @@ onUnmounted(() => {
   }
 }
 
+/* 内联分页控制（在标题栏中） */
+.pagination-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 20px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 246, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.page-btn-inline {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  color: #00f6ff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.page-btn-inline:hover:not(:disabled) {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+}
+
+.page-btn-inline:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-info-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.page-info-inline .page-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #00f6ff;
+  text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
+}
+
+.page-info-inline .page-divider {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.page-info-inline .page-total {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.page-info-inline .camera-info {
+  margin-left: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
 /* 控制按钮组 */
 .controls {
   margin-left: 0;
@@ -714,84 +782,6 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.3);
   color: white;
-}
-
-/* 翻页控制栏 */
-.pagination-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 12px 20px;
-  margin-bottom: 15px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(0, 246, 255, 0.2);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-}
-
-.page-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
-  border: 1px solid rgba(6, 182, 212, 0.5);
-  color: #00f6ff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
-  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-  transform: translateY(-2px);
-}
-
-.page-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.page-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.page-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: #00f6ff;
-  text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
-}
-
-.page-divider {
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.page-total {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.camera-info {
-  margin-left: 8px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-}
-
-.shortcut-tip {
-  margin-left: 12px;
-  padding: 4px 10px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
-  color: #10b981;
-  font-size: 11px;
-  font-weight: normal;
 }
 
 /* 加载和错误提示 */
