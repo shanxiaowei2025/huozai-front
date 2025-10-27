@@ -6,9 +6,6 @@
       <span class="icon">📹</span>
       <span>
         实时视频监控（{{ splitMode }}分屏）
-        <span v-if="totalPages > 1" class="page-info">
-          - 第 {{ currentPage + 1 }}/{{ totalPages }} 页
-        </span>
       </span>
       
       <!-- 分屏切换按钮 -->
@@ -159,9 +156,7 @@ const loading = ref(false)
 // 错误信息
 const error = ref(null)
 
-// 滚轮翻页相关
-const currentPage = ref(0) // 当前页索引
-const overlapCount = 3 // 每次翻页保留的重叠监控数量
+// 删除翻页相关变量
 
 // 所有视频数据（按小区分组）
 const allVideos = ref([
@@ -224,54 +219,13 @@ const communityVideos = computed(() => {
   return allVideos.value.filter(video => video.community === selectedCommunity.value)
 })
 
-// 计算总页数
-const totalPages = computed(() => {
-  const total = communityVideos.value.length
-  if (total <= splitMode.value) {
-    return 1 // 只有一页
-  }
-  // 计算需要多少页：第一页显示splitMode个，之后每页新增(splitMode - overlapCount)个
-  const remainingVideos = total - splitMode.value
-  const videosPerPage = splitMode.value - overlapCount
-  return 1 + Math.ceil(remainingVideos / videosPerPage)
-})
+// 删除总页数计算
 
 // 根据选中的小区和当前页码显示对应的视频（带重叠的分页）
 const displayVideos = computed(() => {
   const videos = communityVideos.value
-  const total = videos.length
-  
-  console.log('📊 displayVideos计算:', {
-    总监控数: total,
-    分屏模式: splitMode.value,
-    当前页: currentPage.value,
-    重叠数: overlapCount
-  })
-  
-  // 如果监控数量不超过分屏数，显示全部
-  if (total <= splitMode.value) {
-    console.log('✅ 监控数量不超过分屏数，显示全部', videos.length, '个')
-    return videos
-  }
-  
-  // 计算当前页的起始索引
-  // 每次翻页，保留最后3个，新增6个（9分屏时）
-  // 第1页：索引0（显示0-8，共9个）
-  // 第2页：索引6（显示6-14，保留6、7、8，新增9-14，共9个）
-  // 第3页：索引12（显示12-20，保留12、13、14，新增15-20，共9个）
-  const videosPerPage = splitMode.value - overlapCount // 每页新增的监控数
-  const startIndex = currentPage.value * videosPerPage
-  
-  const result = videos.slice(startIndex, startIndex + splitMode.value)
-  console.log('📹 分页显示:', {
-    每页新增: videosPerPage,
-    起始索引: startIndex,
-    结束索引: startIndex + splitMode.value,
-    实际显示: result.length
-  })
-  
-  // 返回当前页的监控（最多splitMode个）
-  return result
+  // 简单返回当前分屏数量的监控
+  return videos.slice(0, splitMode.value)
 })
 
 // 选择视频
@@ -294,45 +248,16 @@ const closeFullscreen = () => {
   console.log('❌ 关闭全屏显示')
 }
 
-// 滚轮事件处理（翻页）
-let wheelTimeout = null
-const handleWheel = (event) => {
-  // 防抖：避免滚动过快
-  if (wheelTimeout) return
-  
-  wheelTimeout = setTimeout(() => {
-    wheelTimeout = null
-  }, 300) // 300ms内只能翻一次页
-  
-  event.preventDefault()
-  
-  if (event.deltaY > 0) {
-    // 向下滚动 - 下一页
-    if (currentPage.value < totalPages.value - 1) {
-      currentPage.value++
-      console.log(`📄 翻页：第 ${currentPage.value + 1}/${totalPages.value} 页`)
-    }
-  } else {
-    // 向上滚动 - 上一页
-    if (currentPage.value > 0) {
-      currentPage.value--
-      console.log(`📄 翻页：第 ${currentPage.value + 1}/${totalPages.value} 页`)
-    }
-  }
-}
+// 删除滚轮翻页事件处理
 
-// 监听小区切换，重置页码
+// 监听小区切换
 const handleCommunityChange = (communityId) => {
   selectedCommunity.value = communityId
-  currentPage.value = 0 // 切换小区时重置到第一页
-  console.log(`🏘️ 切换小区，重置到第1页`)
 }
 
-// 监听分屏模式切换，重置页码
+// 监听分屏模式切换
 const handleSplitModeChange = (mode) => {
   splitMode.value = mode
-  currentPage.value = 0 // 切换分屏模式时重置到第一页
-  console.log(`📺 切换到 ${mode} 分屏，重置到第1页`)
 }
 
 // 更新当前时间
@@ -453,22 +378,12 @@ onMounted(() => {
       updateCurrentTime()
     }
   }, 1000)
-  
-  // 添加滚轮事件监听
-  if (videoGridRef.value) {
-    videoGridRef.value.addEventListener('wheel', handleWheel, { passive: false })
-  }
 })
 
-// 组件卸载时清理定时器和事件监听
+// 组件卸载时清理定时器
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
-  }
-  
-  // 移除滚轮事件监听
-  if (videoGridRef.value) {
-    videoGridRef.value.removeEventListener('wheel', handleWheel)
   }
 })
 </script>
@@ -637,7 +552,7 @@ onUnmounted(() => {
   flex: 1;
   display: grid;
   gap: 12px;
-  overflow: hidden; /* 禁用滚动条，改用滚轮翻页 */
+  overflow: hidden;
   align-content: start;
   padding-right: 8px;
 }
