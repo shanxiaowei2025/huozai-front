@@ -256,9 +256,9 @@ const displayVideos = computed(() => {
   
   // 计算当前页的起始索引
   // 每次翻页，保留最后3个，新增6个（9分屏时）
-  // 第1页：索引0（显示0-8）
-  // 第2页：索引6（显示6-14）保留6、7、8，新增9-14
-  // 第3页：索引12（显示12-20）保留12、13、14，新增15-20
+  // 第1页：索引0（显示0-8，共9个）
+  // 第2页：索引6（显示6-14，保留6、7、8，新增9-14，共9个）
+  // 第3页：索引12（显示12-20，保留12、13、14，新增15-20，共9个）
   const videosPerPage = splitMode.value - overlapCount // 每页新增的监控数
   const startIndex = currentPage.value * videosPerPage
   
