@@ -106,7 +106,7 @@ if (alarmData) {
   }, { deep: true })
 }
 
-// 添加报警标记
+// 添加报警标记（支持同位置多标记分散显示）
 const addAlarmMarkers = () => {
   if (!map || !alarmData || !alarmData.alarms.value) return
   
@@ -121,75 +121,303 @@ const addAlarmMarkers = () => {
   })
   alarmMarkers = []
   
-  // 添加新的报警标记
-  alarmData.alarms.value.forEach(alarm => {
-    if (!alarm.coordinates) return
+  // 按位置分组报警（检测重复坐标）
+  const groupedAlarms = groupAlarmsByLocation(alarmData.alarms.value)
+  
+  // 为每组报警添加标记
+  Object.values(groupedAlarms).forEach(group => {
+    const alarms = group.alarms
+    const count = alarms.length
     
-    const point = new BMap.Point(alarm.coordinates.lng, alarm.coordinates.lat)
-    
-    // 根据报警状态确定颜色
-    let color = '#ef4444' // 未处理 - 红色
-    if (alarm.status === 'processing') {
-      color = '#f59e0b' // 处理中 - 橙色
-    } else if (alarm.status === 'resolved') {
-      color = '#10b981' // 已处理 - 绿色
-    }
-    
-    // 未处理的报警使用更大更醒目的图标
-    const isUnhandled = alarm.status === 'pending'
-    const iconSize = isUnhandled ? 50 : 35
-    
-    // 创建自定义图标
-    const icon = new BMap.Icon(
-      createAlarmIcon(alarm.icon, color, isUnhandled),
-      new BMap.Size(iconSize, iconSize),
-      {
-        imageSize: new BMap.Size(iconSize, iconSize)
-      }
-    )
-    
-    // 创建标记
-    const marker = new BMap.Marker(point, { icon })
-    map.addOverlay(marker)
-    
-    // 添加标签
-    const labelText = isUnhandled ? `🚨 ${alarm.location}` : alarm.location
-    const label = new BMap.Label(labelText, {
-      offset: new BMap.Size(iconSize / 2, -iconSize / 2 - 5)
-    })
-    label.setStyle({
-      color: '#fff',
-      backgroundColor: color,
-      border: isUnhandled ? '2px solid #fff' : 'none',
-      borderRadius: '6px',
-      padding: isUnhandled ? '8px 14px' : '5px 10px',
-      fontSize: isUnhandled ? '13px' : '12px',
-      fontWeight: 'bold',
-      boxShadow: isUnhandled ? `0 0 25px ${color}` : `0 2px 8px rgba(0,0,0,0.3)`,
-      whiteSpace: 'nowrap',
-      maxWidth: '200px',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis'
-    })
-    marker.setLabel(label)
-    
-    // 添加点击事件
-    marker.addEventListener('click', () => {
-      showAlarmInfo(alarm)
-    })
-    
-    // 如果是未处理的报警，添加跳动和闪烁效果
-    if (isUnhandled) {
-      marker.setAnimation(BMAP_ANIMATION_BOUNCE)
-      // 添加光圈效果
-      const circle = addPulsingCircle(point, color)
-      alarmMarkers.push({ overlay: marker, timer: circle.timer })
+    if (count === 1) {
+      // 单个报警，正常显示
+      addSingleAlarmMarker(alarms[0])
     } else {
-      alarmMarkers.push({ overlay: marker })
+      // 多个报警在同一位置，使用聚合标记或环形分散
+      if (count <= 5) {
+        // 少于等于5个，环形分散显示
+        addCircularAlarmMarkers(alarms, group.center)
+      } else {
+        // 超过5个，显示聚合标记
+        addClusteredAlarmMarker(alarms, group.center)
+      }
     }
   })
   
   console.log('🗺️ 地图已更新报警标记:', alarmData.alarms.value.length, '个')
+}
+
+// 按位置分组报警（相同或相近位置视为同一组）
+const groupAlarmsByLocation = (alarms) => {
+  const groups = {}
+  const threshold = 0.0005 // 约50米范围内视为同一位置
+  
+  alarms.forEach(alarm => {
+    if (!alarm.coordinates) return
+    
+    // 查找是否已有相近位置的组
+    let foundGroup = null
+    for (const [key, group] of Object.entries(groups)) {
+      const distance = Math.sqrt(
+        Math.pow(group.center.lng - alarm.coordinates.lng, 2) +
+        Math.pow(group.center.lat - alarm.coordinates.lat, 2)
+      )
+      
+      if (distance < threshold) {
+        foundGroup = key
+        break
+      }
+    }
+    
+    if (foundGroup) {
+      // 添加到现有组
+      groups[foundGroup].alarms.push(alarm)
+    } else {
+      // 创建新组
+      const key = `${alarm.coordinates.lng}_${alarm.coordinates.lat}`
+      groups[key] = {
+        center: { lng: alarm.coordinates.lng, lat: alarm.coordinates.lat },
+        alarms: [alarm]
+      }
+    }
+  })
+  
+  return groups
+}
+
+// 添加单个报警标记
+const addSingleAlarmMarker = (alarm, offsetLng = 0, offsetLat = 0) => {
+  const point = new BMap.Point(
+    alarm.coordinates.lng + offsetLng, 
+    alarm.coordinates.lat + offsetLat
+  )
+  
+  // 根据报警状态确定颜色
+  let color = '#ef4444' // 未处理 - 红色
+  if (alarm.status === 'processing') {
+    color = '#f59e0b' // 处理中 - 橙色
+  } else if (alarm.status === 'resolved') {
+    color = '#10b981' // 已处理 - 绿色
+  }
+  
+  // 未处理的报警使用更大更醒目的图标
+  const isUnhandled = alarm.status === 'pending'
+  const iconSize = isUnhandled ? 50 : 35
+  
+  // 创建自定义图标
+  const icon = new BMap.Icon(
+    createAlarmIcon(alarm.icon, color, isUnhandled),
+    new BMap.Size(iconSize, iconSize),
+    {
+      imageSize: new BMap.Size(iconSize, iconSize)
+    }
+  )
+  
+  // 创建标记
+  const marker = new BMap.Marker(point, { icon })
+  map.addOverlay(marker)
+  
+  // 添加标签
+  const labelText = isUnhandled ? `🚨 ${alarm.location}` : alarm.location
+  const label = new BMap.Label(labelText, {
+    offset: new BMap.Size(iconSize / 2, -iconSize / 2 - 5)
+  })
+  label.setStyle({
+    color: '#fff',
+    backgroundColor: color,
+    border: isUnhandled ? '2px solid #fff' : 'none',
+    borderRadius: '6px',
+    padding: isUnhandled ? '8px 14px' : '5px 10px',
+    fontSize: isUnhandled ? '13px' : '12px',
+    fontWeight: 'bold',
+    boxShadow: isUnhandled ? `0 0 25px ${color}` : `0 2px 8px rgba(0,0,0,0.3)`,
+    whiteSpace: 'nowrap',
+    maxWidth: '200px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  })
+  marker.setLabel(label)
+  
+  // 添加点击事件
+  marker.addEventListener('click', () => {
+    showAlarmInfo(alarm)
+  })
+  
+  // 如果是未处理的报警，添加跳动和闪烁效果
+  if (isUnhandled) {
+    marker.setAnimation(BMAP_ANIMATION_BOUNCE)
+    // 添加光圈效果
+    const circle = addPulsingCircle(point, color)
+    alarmMarkers.push({ overlay: marker, timer: circle.timer })
+  } else {
+    alarmMarkers.push({ overlay: marker })
+  }
+}
+
+// 环形分散显示多个报警标记
+const addCircularAlarmMarkers = (alarms, center) => {
+  const radius = 0.002 // 环形半径（约200米）
+  const count = alarms.length
+  
+  alarms.forEach((alarm, index) => {
+    // 计算环形位置（均匀分布）
+    const angle = (2 * Math.PI * index) / count
+    const offsetLng = radius * Math.cos(angle)
+    const offsetLat = radius * Math.sin(angle)
+    
+    // 添加偏移后的标记
+    addSingleAlarmMarker(alarm, offsetLng, offsetLat)
+  })
+  
+  // 在中心添加一个提示标记
+  const centerPoint = new BMap.Point(center.lng, center.lat)
+  const centerLabel = new BMap.Label(`${count}个报警`, {
+    position: centerPoint
+  })
+  centerLabel.setStyle({
+    color: '#fff',
+    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+    border: '2px solid #fff',
+    borderRadius: '50%',
+    padding: '8px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    boxShadow: '0 0 20px rgba(239, 68, 68, 0.8)',
+    textAlign: 'center',
+    minWidth: '40px',
+    minHeight: '40px',
+    lineHeight: '24px'
+  })
+  map.addOverlay(centerLabel)
+  alarmMarkers.push({ overlay: centerLabel })
+}
+
+// 添加聚合报警标记（超过5个报警时使用）
+const addClusteredAlarmMarker = (alarms, center) => {
+  const point = new BMap.Point(center.lng, center.lat)
+  const count = alarms.length
+  
+  // 统计未处理报警数量
+  const unhandledCount = alarms.filter(a => a.status === 'pending').length
+  const hasUnhandled = unhandledCount > 0
+  
+  // 创建聚合图标
+  const iconSize = 60
+  const icon = new BMap.Icon(
+    createClusterIcon(count, hasUnhandled),
+    new BMap.Size(iconSize, iconSize),
+    {
+      imageSize: new BMap.Size(iconSize, iconSize)
+    }
+  )
+  
+  const marker = new BMap.Marker(point, { icon })
+  map.addOverlay(marker)
+  
+  // 添加标签
+  const labelText = hasUnhandled ? `🚨 ${count}个报警 (${unhandledCount}未处理)` : `${count}个报警`
+  const label = new BMap.Label(labelText, {
+    offset: new BMap.Size(30, -35)
+  })
+  label.setStyle({
+    color: '#fff',
+    backgroundColor: hasUnhandled ? '#ef4444' : '#f59e0b',
+    border: '2px solid #fff',
+    borderRadius: '6px',
+    padding: '8px 14px',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    boxShadow: hasUnhandled ? '0 0 25px rgba(239, 68, 68, 0.8)' : '0 2px 8px rgba(0,0,0,0.3)',
+    whiteSpace: 'nowrap'
+  })
+  marker.setLabel(label)
+  
+  // 点击聚合标记显示列表
+  marker.addEventListener('click', () => {
+    showClusteredAlarmInfo(alarms, center)
+  })
+  
+  // 如果有未处理报警，添加动画效果
+  if (hasUnhandled) {
+    marker.setAnimation(BMAP_ANIMATION_BOUNCE)
+    const circle = addPulsingCircle(point, '#ef4444')
+    alarmMarkers.push({ overlay: marker, timer: circle.timer })
+  } else {
+    alarmMarkers.push({ overlay: marker })
+  }
+}
+
+// 创建聚合图标
+const createClusterIcon = (count, hasUnhandled) => {
+  const color = hasUnhandled ? '#ef4444' : '#f59e0b'
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+      <defs>
+        <filter id="glow-cluster">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <circle cx="30" cy="30" r="25" fill="${color}" opacity="0.95" stroke="#fff" stroke-width="3" filter="url(#glow-cluster)"/>
+      <text x="30" y="38" font-size="22" fill="#fff" text-anchor="middle" font-weight="bold">${count}</text>
+    </svg>
+  `
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+}
+
+// 显示聚合报警信息列表
+const showClusteredAlarmInfo = (alarms, center) => {
+  const point = new BMap.Point(center.lng, center.lat)
+  
+  // 按状态分组统计
+  const pending = alarms.filter(a => a.status === 'pending')
+  const processing = alarms.filter(a => a.status === 'processing')
+  const resolved = alarms.filter(a => a.status === 'resolved')
+  
+  // 生成报警列表HTML
+  const alarmListHtml = alarms.slice(0, 10).map(alarm => {
+    const statusColor = {
+      'pending': '#ef4444',
+      'processing': '#f59e0b',
+      'resolved': '#10b981'
+    }
+    return `
+      <div style="padding: 8px; margin: 4px 0; background: #f9fafb; border-left: 3px solid ${statusColor[alarm.status]}; border-radius: 4px; cursor: pointer;" 
+           onclick="console.log('点击报警:', '${alarm.id}')">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">${alarm.icon}</span>
+          <div style="flex: 1;">
+            <strong style="color: #333; font-size: 13px;">${alarm.location}</strong>
+            <p style="margin: 2px 0 0 0; color: #666; font-size: 11px;">${alarm.time}</p>
+          </div>
+        </div>
+      </div>
+    `
+  }).join('')
+  
+  const moreText = alarms.length > 10 ? `<p style="text-align: center; color: #999; font-size: 12px; margin: 8px 0;">还有 ${alarms.length - 10} 个报警...</p>` : ''
+  
+  const infoWindow = new BMap.InfoWindow(`
+    <div style="padding: 16px; min-width: 320px; max-width: 400px; max-height: 500px; overflow-y: auto;">
+      <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb;">
+        <h3 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">📍 该位置共有 ${alarms.length} 个报警</h3>
+        <div style="display: flex; gap: 12px; font-size: 13px;">
+          <span style="color: #ef4444;">⚠️ 未处理: ${pending.length}</span>
+          <span style="color: #f59e0b;">🔄 处理中: ${processing.length}</span>
+          <span style="color: #10b981;">✅ 已处理: ${resolved.length}</span>
+        </div>
+      </div>
+      <div style="max-height: 300px; overflow-y: auto;">
+        ${alarmListHtml}
+        ${moreText}
+      </div>
+    </div>
+  `)
+  
+  map.openInfoWindow(infoWindow, point)
 }
 
 // 创建报警图标

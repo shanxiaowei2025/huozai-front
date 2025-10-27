@@ -373,7 +373,7 @@ const alarms = ref([
     location: '加载中...',
     time: `${getTodayDateStr()} 14:32:15`,
     status: 'pending',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     description: '检测到明火和大量烟雾，请立即处理！'
   },
   {
@@ -383,7 +383,7 @@ const alarms = ref([
     location: '加载中...',
     time: `${getTodayDateStr()} 14:28:43`,
     status: 'pending',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     description: '检测到有物体从高空抛下，请注意安全！'
   },
   {
@@ -393,7 +393,7 @@ const alarms = ref([
     location: '加载中...',
     time: `${getTodayDateStr()} 14:15:22`,
     status: 'pending',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     description: '系统误报，已确认无火灾风险。'
   },
   {
@@ -403,7 +403,7 @@ const alarms = ref([
     location: '加载中...',
     time: `${getTodayDateStr()} 13:58:33`,
     status: 'pending',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     description: '检测到烟雾浓度超标，请及时查看！'
   }
 ])
@@ -487,6 +487,14 @@ const generateNewAlarm = () => {
   const now = new Date()
   const timeString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
   
+  // 火灾相关视频列表
+  const fireVideos = [
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
+  ]
+  
   const alarm = {
     id: Date.now(),
     type: randomType.type,
@@ -499,7 +507,7 @@ const generateNewAlarm = () => {
     } : null,
     time: timeString,
     status: 'pending',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    videoUrl: fireVideos[Math.floor(Math.random() * fireVideos.length)],
     description: randomType.description
   }
   

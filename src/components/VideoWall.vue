@@ -4,7 +4,7 @@
     <!-- 标题栏 -->
     <div class="module-title">
       <span class="icon">📹</span>
-      <span>实时视频监控（{{ splitMode }}分屏）</span>
+      <span>实时视频监控（{{ displayVideos.length }}个 - {{ splitMode }}分屏）</span>
       
       <!-- 分屏切换按钮 -->
       <div class="controls">
@@ -154,12 +154,11 @@ const allVideos = ref([
   { name: '槐园-15栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
-// 根据选中的小区和分屏模式显示对应的视频
+// 根据选中的小区显示对应的视频（显示所有监控，支持滚动）
 const displayVideos = computed(() => {
-  // 筛选当前小区的摄像头
+  // 筛选当前小区的摄像头，返回全部
   const communityVideos = allVideos.value.filter(video => video.community === selectedCommunity.value)
-  // 返回前 N 个（N = 分屏数量）
-  return communityVideos.slice(0, splitMode.value)
+  return communityVideos
 })
 
 // 选择视频
@@ -424,24 +423,46 @@ onMounted(() => {
   display: grid;
   gap: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+  padding-right: 8px;
 }
 
-/* 9分屏：3x3 */
+/* 滚动条样式 */
+.video-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.video-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.video-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 246, 255, 0.3);
+  border-radius: 4px;
+}
+
+.video-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 246, 255, 0.5);
+}
+
+/* 9分屏：3列，自动行 */
 .grid-9 {
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-auto-rows: minmax(200px, 1fr);
 }
 
-/* 16分屏：4x4 */
+/* 16分屏：4列，自动行 */
 .grid-16 {
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-auto-rows: minmax(150px, 1fr);
 }
 
-/* 25分屏：5x5 */
+/* 25分屏：5列，自动行 */
 .grid-25 {
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-auto-rows: minmax(120px, 1fr);
 }
 
 /* 单个视频项 */
