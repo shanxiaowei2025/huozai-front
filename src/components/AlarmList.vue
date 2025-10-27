@@ -194,6 +194,18 @@ import { ref, onMounted, onUnmounted, watch, inject, computed } from 'vue'
 const realLocations = ref([])
 const isLoadingLocations = ref(false)
 
+// 备用的定兴县地点数据（当API无法获取真实数据时使用）
+const fallbackLocations = [
+  { name: '定兴县政府家属院', address: '河北省保定市定兴县', point: { lng: 115.808, lat: 39.267 } },
+  { name: '定兴县人民医院家属楼', address: '河北省保定市定兴县', point: { lng: 115.810, lat: 39.268 } },
+  { name: '定兴县实验中学家属区', address: '河北省保定市定兴县', point: { lng: 115.806, lat: 39.266 } },
+  { name: '定兴县水岸花园', address: '河北省保定市定兴县', point: { lng: 115.812, lat: 39.269 } },
+  { name: '定兴县阳光小区', address: '河北省保定市定兴县', point: { lng: 115.805, lat: 39.265 } },
+  { name: '定兴县锦绣家园', address: '河北省保定市定兴县', point: { lng: 115.815, lat: 39.270 } },
+  { name: '定兴县幸福里小区', address: '河北省保定市定兴县', point: { lng: 115.803, lat: 39.264 } },
+  { name: '定兴县书香苑', address: '河北省保定市定兴县', point: { lng: 115.818, lat: 39.271 } }
+]
+
 // 注入报警数据共享机制
 const alarmData = inject('alarmData', null)
 
@@ -224,6 +236,12 @@ const fetchRealLocations = async () => {
             for (let i = 0; i < results.getCurrentNumPois(); i++) {
               const poi = results.getPoi(i)
               if (poi) {
+                // 严格过滤：只保留地址中包含"定兴县"的结果
+                const address = poi.address || ''
+                if (!address.includes('定兴县')) {
+                  continue // 跳过非定兴县的地址
+                }
+                
                 // 避免重复添加
                 const isDuplicate = allLocations.some(loc => 
                   loc.name === poi.title && loc.address === poi.address
@@ -244,12 +262,12 @@ const fetchRealLocations = async () => {
           // 所有搜索完成后更新数据
           if (completedSearches === searchKeywords.length) {
             realLocations.value = allLocations
-            console.log(`✅ 成功获取真实地点：${allLocations.length} 个`)
+            console.log(`✅ 成功获取定兴县真实地点：${allLocations.length} 个`)
             console.log('📋 地点来源:', searchKeywords.join(', '))
             
             // 显示前5个地点的详细信息作为示例
             if (allLocations.length > 0) {
-              console.log('📍 示例地点（前5个）:')
+              console.log('📍 定兴县示例地点（前5个）:')
               allLocations.slice(0, 5).forEach((loc, index) => {
                 console.log(`  ${index + 1}. ${loc.name}`)
                 console.log(`     地址: ${loc.address}`)
@@ -257,6 +275,11 @@ const fetchRealLocations = async () => {
                   console.log(`     坐标: ${loc.point.lng.toFixed(6)}, ${loc.point.lat.toFixed(6)}`)
                 }
               })
+            } else {
+              console.warn('⚠️ 未找到定兴县的地点数据，使用备用方案')
+              // 使用备用地点数据
+              realLocations.value = fallbackLocations
+              console.log('📍 已加载备用定兴县地点数据:', fallbackLocations.length, '个')
             }
             
             // 更新现有报警的位置信息
@@ -290,16 +313,19 @@ const generateBuildingInfo = () => {
 
 // 从真实地点生成位置字符串
 const generateLocationFromReal = () => {
-  if (realLocations.value.length === 0) {
-    // 如果还没有加载到真实地点，使用默认位置
+  // 优先使用API获取的真实地点，如果没有则使用备用地点
+  const locations = realLocations.value.length > 0 ? realLocations.value : fallbackLocations
+  
+  if (locations.length === 0) {
+    // 如果还没有加载到任何地点，使用默认位置
     return {
       displayName: `定兴县某小区${generateBuildingInfo()}`,
       fullAddress: '河北省保定市定兴县',
-      poi: null
+      poi: { lng: 115.808, lat: 39.267 } // 定兴县中心坐标
     }
   }
   
-  const randomLocation = realLocations.value[Math.floor(Math.random() * realLocations.value.length)]
+  const randomLocation = locations[Math.floor(Math.random() * locations.length)]
   const buildingInfo = generateBuildingInfo()
   
   // 提取小区名称（去除地址中的多余信息）
@@ -309,7 +335,7 @@ const generateLocationFromReal = () => {
   
   return {
     displayName: `${locationName}${buildingInfo}`,
-    fullAddress: randomLocation.address || '定兴县',
+    fullAddress: randomLocation.address || '河北省保定市定兴县',
     poi: randomLocation.point,
     communityName: locationName,
     buildingInfo: buildingInfo

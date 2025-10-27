@@ -46,11 +46,8 @@ let alarmMarkers = [] // 存储报警标记
 
 // 摄像头数据（包含经纬度和报警处理状态）
 const cameras = ref([
-  { id: 1, name: 'A栋-3F', lng: 115.808, lat: 39.267, status: 'alarm', alarmHandled: false, color: '#ef4444' },
-  { id: 2, name: 'B栋-5F', lng: 115.805, lat: 39.270, status: 'normal', alarmHandled: true, color: '#10b981' },
-  { id: 3, name: 'C栋-8F', lng: 115.812, lat: 39.268, status: 'normal', alarmHandled: true, color: '#10b981' },
-  { id: 4, name: 'D栋-2F', lng: 115.806, lat: 39.264, status: 'normal', alarmHandled: true, color: '#10b981' },
-  { id: 5, name: 'E栋-12F', lng: 115.815, lat: 39.272, status: 'warning', alarmHandled: true, color: '#f59e0b' }
+  // 摄像头数据将从后端API获取
+  // 格式：{ id, name, lng, lat, status: 'normal'|'warning'|'alarm', alarmHandled: boolean, color }
 ])
 
 // 计算未处理报警的数量（包括报警列表中的未处理报警）
