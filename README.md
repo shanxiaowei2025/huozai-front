@@ -18,6 +18,8 @@
 
 ### 📹 视频监控墙
 - 支持 9/16/25 分屏切换
+- 小区标签切换功能（集成百度地图 API）
+- 动态加载小区数据
 - 报警视频自动高亮
 - 视频点击选中
 - 实时状态显示
@@ -257,10 +259,72 @@ const player = videojs('video-player', {
 
 ---
 
+## 📍 百度地图 API 集成
+
+项目已集成百度地图 API，可以动态加载小区数据。
+
+### 快速使用
+
+在 `VideoWall.vue` 组件中已自动启用百度地图 API：
+
+```javascript
+import { searchCommunities } from '@/services/baiduMapService'
+
+// 搜索小区
+const communities = await searchCommunities({
+  city: '定兴县',
+  query: '小区',
+  pageSize: 20
+})
+```
+
+### 详细文档
+
+查看完整的 API 文档和使用示例：
+- 📖 [百度地图API集成说明.md](./docs/百度地图API集成说明.md)
+- 💻 [百度地图API使用示例.js](./docs/百度地图API使用示例.js)
+
+### 主要功能
+
+- ✅ 按城市搜索小区
+- ✅ 搜索附近小区（指定半径）
+- ✅ 获取小区详细信息
+- ✅ 地理编码（地址 ↔ 经纬度）
+- ✅ 自动生成摄像头数据
+- ✅ 容错机制（API 失败自动降级）
+
+### 配置说明
+
+API Key 配置在 `index.html` 中：
+```html
+<script src="https://api.map.baidu.com/api?v=3.0&ak=你的API_KEY"></script>
+```
+
+如需更换 API Key，请访问 [百度地图开放平台](https://lbsyun.baidu.com/) 申请。
+
+### 📚 完整文档
+
+查看详细的使用说明和示例：
+
+| 文档 | 说明 | 适合人群 |
+|------|------|----------|
+| [📚 文档中心](./docs/README.md) | 所有文档的索引和导航 | 所有人 |
+| [🎉 集成总结](./docs/集成总结.md) | 查看完成的工作和功能清单 | **推荐首读** |
+| [🚀 快速开始](./docs/快速开始.md) | 新手入门指南 | **新手必读** |
+| [📍 API集成说明](./docs/百度地图API集成说明.md) | 完整的 API 文档 | 开发者 |
+| [💻 使用示例](./docs/百度地图API使用示例.js) | 可运行的代码示例 | 开发者 |
+| [🔖 快速参考](./docs/API快速参考.md) | API 速查卡片 | **建议收藏** |
+| [🧪 测试工具](./scripts/test-baidu-api.js) | API 测试脚本 | 调试使用 |
+
+**👉 推荐阅读顺序：[集成总结](./docs/集成总结.md) → [快速开始](./docs/快速开始.md) → [快速参考](./docs/API快速参考.md)**
+
+---
+
 ## 📝 下一步优化建议
 
+- [x] 集成百度地图 API
+- [x] 动态加载小区数据
 - [ ] 接入真实 API 数据
-- [ ] 集成高德/百度地图
 - [ ] 实现视频实时播放
 - [ ] 添加数据定时刷新
 - [ ] 实现 WebSocket 推送
