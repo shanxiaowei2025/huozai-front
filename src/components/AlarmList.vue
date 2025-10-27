@@ -155,20 +155,49 @@
         <!-- 监控视频 -->
         <div class="popup-video">
           <div class="video-title">实时监控画面</div>
-          <div class="video-container">
-            <video 
-              v-if="newAlarm?.videoUrl" 
-              :src="newAlarm.videoUrl" 
-              controls 
-              autoplay 
-              muted
-              class="video-player"
-            >
-              您的浏览器不支持视频播放
-            </video>
-            <div v-else class="video-placeholder">
-              <span class="placeholder-icon">📹</span>
-              <span class="placeholder-text">暂无监控视频</span>
+          <div class="video-container loading-video">
+            <!-- 加载中的假视频效果 -->
+            <div class="fake-video">
+              <!-- 扫描线效果 -->
+              <div class="scan-line"></div>
+              
+              <!-- 雪花噪点效果 -->
+              <div class="noise-overlay"></div>
+              
+              <!-- 视频信息叠加层 -->
+              <div class="video-overlay">
+                <div class="overlay-top">
+                  <div class="camera-info">
+                    <span class="camera-icon">📹</span>
+                    <span class="camera-label">CAM {{ newAlarm?.id?.slice(-2) || '01' }}</span>
+                    <span class="status-indicator">
+                      <span class="red-dot"></span>
+                      <span>REC</span>
+                    </span>
+                  </div>
+                  <div class="timestamp">{{ currentVideoTime }}</div>
+                </div>
+                
+                <div class="overlay-center">
+                  <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-text">视频加载中...</div>
+                  </div>
+                </div>
+                
+                <div class="overlay-bottom">
+                  <div class="location-info">
+                    <span>📍 {{ newAlarm?.location }}</span>
+                  </div>
+                  <div class="signal-strength">
+                    <span class="signal-bar" :class="{ active: true }"></span>
+                    <span class="signal-bar" :class="{ active: true }"></span>
+                    <span class="signal-bar" :class="{ active: true }"></span>
+                    <span class="signal-bar" :class="{ active: signalLevel >= 4 }"></span>
+                    <span class="signal-bar" :class="{ active: signalLevel >= 5 }"></span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -459,6 +488,31 @@ const showNewAlarmPopup = ref(false)
 const newAlarm = ref(null)
 const alarmSound = ref(null)
 
+// 视频相关状态
+const currentVideoTime = ref('')
+const signalLevel = ref(3) // 信号强度 1-5
+
+// 更新视频时间戳
+const updateVideoTime = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  currentVideoTime.value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 随机更新信号强度
+const updateSignalStrength = () => {
+  signalLevel.value = Math.floor(Math.random() * 3) + 3 // 3-5之间
+}
+
+// 视频时间更新定时器
+let videoTimeInterval = null
+let signalInterval = null
+
 // 点击报警项
 const handleAlarm = (alarm) => {
   console.log('查看报警详情：', alarm)
@@ -624,6 +678,20 @@ onMounted(() => {
   setTimeout(() => {
     fetchRealLocations()
   }, 1000)
+  
+  // 启动视频时间更新定时器
+  videoTimeInterval = setInterval(() => {
+    updateVideoTime()
+  }, 1000)
+  
+  // 启动信号强度更新定时器（每3秒更新一次）
+  signalInterval = setInterval(() => {
+    updateSignalStrength()
+  }, 3000)
+  
+  // 初始化时间和信号
+  updateVideoTime()
+  updateSignalStrength()
 })
 
 // 组件卸载时清理
@@ -632,6 +700,14 @@ onUnmounted(() => {
   if (alarmSound.value) {
     alarmSound.value.pause()
     alarmSound.value = null
+  }
+  
+  // 清理定时器
+  if (videoTimeInterval) {
+    clearInterval(videoTimeInterval)
+  }
+  if (signalInterval) {
+    clearInterval(signalInterval)
   }
 })
 </script>
@@ -1251,6 +1327,260 @@ onUnmounted(() => {
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid rgba(0, 246, 255, 0.3);
+}
+
+/* 假视频容器 */
+.fake-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+  overflow: hidden;
+}
+
+/* 扫描线效果 */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(0, 246, 255, 0.8) 50%, 
+    transparent 100%
+  );
+  box-shadow: 0 0 20px rgba(0, 246, 255, 0.5);
+  animation: scan 3s linear infinite;
+  z-index: 2;
+}
+
+@keyframes scan {
+  0% {
+    top: -10%;
+  }
+  100% {
+    top: 110%;
+  }
+}
+
+/* 雪花噪点效果 */
+.noise-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.03) 2px,
+      rgba(255, 255, 255, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.03) 2px,
+      rgba(255, 255, 255, 0.03) 4px
+    );
+  opacity: 0.5;
+  animation: noise 0.2s infinite;
+  pointer-events: none;
+}
+
+@keyframes noise {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* 视频信息叠加层 */
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.overlay-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.camera-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.camera-icon {
+  font-size: 16px;
+}
+
+.camera-label {
+  font-weight: bold;
+  color: #00f6ff;
+  letter-spacing: 1px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ff4444;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.red-dot {
+  width: 8px;
+  height: 8px;
+  background: #ff4444;
+  border-radius: 50%;
+  animation: recording-blink 1.5s infinite;
+}
+
+@keyframes recording-blink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px #ff4444;
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: none;
+  }
+}
+
+.timestamp {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  letter-spacing: 0.5px;
+}
+
+/* 中心加载区域 */
+.overlay-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.spinner-ring {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(0, 246, 255, 0.2);
+  border-top-color: #00f6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-text {
+  color: #00f6ff;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* 底部信息区域 */
+.overlay-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.location-info {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+}
+
+.signal-strength {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.signal-bar {
+  width: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.signal-bar:nth-child(1) {
+  height: 8px;
+}
+
+.signal-bar:nth-child(2) {
+  height: 12px;
+}
+
+.signal-bar:nth-child(3) {
+  height: 16px;
+}
+
+.signal-bar:nth-child(4) {
+  height: 20px;
+}
+
+.signal-bar:nth-child(5) {
+  height: 24px;
+}
+
+.signal-bar.active {
+  background: #00f6ff;
+  box-shadow: 0 0 8px rgba(0, 246, 255, 0.5);
 }
 
 .video-player {

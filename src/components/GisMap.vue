@@ -209,7 +209,8 @@ const addSingleAlarmMarker = (alarm, offsetLng = 0, offsetLat = 0) => {
     createAlarmIcon(alarm.icon, color, isUnhandled),
     new BMap.Size(iconSize, iconSize),
     {
-      imageSize: new BMap.Size(iconSize, iconSize)
+      imageSize: new BMap.Size(iconSize, iconSize),
+      anchor: new BMap.Size(iconSize / 2, iconSize / 2) // 设置锚点在图标中心
     }
   )
   
@@ -220,7 +221,7 @@ const addSingleAlarmMarker = (alarm, offsetLng = 0, offsetLat = 0) => {
   // 添加标签
   const labelText = isUnhandled ? `🚨 ${alarm.location}` : alarm.location
   const label = new BMap.Label(labelText, {
-    offset: new BMap.Size(iconSize / 2, -iconSize / 2 - 5)
+    offset: new BMap.Size(0, -iconSize / 2 - 5) // 标签在图标上方，居中对齐
   })
   label.setStyle({
     color: '#fff',

@@ -4,14 +4,19 @@
     <!-- 标题栏 -->
     <div class="module-title">
       <span class="icon">📹</span>
-      <span>实时视频监控（{{ displayVideos.length }}个 - {{ splitMode }}分屏）</span>
+      <span>
+        实时视频监控（{{ displayVideos.length }}个 - {{ splitMode }}分屏）
+        <span v-if="totalPages > 1" class="page-info">
+          - 第 {{ currentPage + 1 }}/{{ totalPages }} 页
+        </span>
+      </span>
       
       <!-- 分屏切换按钮 -->
       <div class="controls">
         <button 
           v-for="mode in [9, 16, 25]" 
           :key="mode"
-          @click="splitMode = mode"
+          @click="handleSplitModeChange(mode)"
           :class="{ active: splitMode === mode }"
           class="split-btn"
         >
@@ -38,7 +43,7 @@
       <button 
         v-for="community in communities" 
         :key="community.id"
-        @click="selectedCommunity = community.id"
+        @click="handleCommunityChange(community.id)"
         :class="{ active: selectedCommunity === community.id }"
         class="community-btn"
       >
@@ -49,7 +54,7 @@
     </div>
 
     <!-- 视频网格 -->
-    <div class="video-grid" :class="`grid-${splitMode}`">
+    <div ref="videoGridRef" class="video-grid" :class="`grid-${splitMode}`">
       <div 
         v-for="(video, index) in displayVideos" 
         :key="index"
@@ -154,6 +159,10 @@ const loading = ref(false)
 // 错误信息
 const error = ref(null)
 
+// 滚轮翻页相关
+const currentPage = ref(0) // 当前页索引
+const overlapCount = 3 // 每次翻页保留的重叠监控数量
+
 // 所有视频数据（按小区分组）
 const allVideos = ref([
   // A小区摄像头
@@ -210,11 +219,43 @@ const allVideos = ref([
   { name: '槐园-15栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
-// 根据选中的小区显示对应的视频（显示所有监控，支持滚动）
+// 筛选当前小区的所有监控
+const communityVideos = computed(() => {
+  return allVideos.value.filter(video => video.community === selectedCommunity.value)
+})
+
+// 计算总页数
+const totalPages = computed(() => {
+  const total = communityVideos.value.length
+  if (total <= splitMode.value) {
+    return 1 // 只有一页
+  }
+  // 计算需要多少页：第一页显示splitMode个，之后每页新增(splitMode - overlapCount)个
+  const remainingVideos = total - splitMode.value
+  const videosPerPage = splitMode.value - overlapCount
+  return 1 + Math.ceil(remainingVideos / videosPerPage)
+})
+
+// 根据选中的小区和当前页码显示对应的视频（带重叠的分页）
 const displayVideos = computed(() => {
-  // 筛选当前小区的摄像头，返回全部
-  const communityVideos = allVideos.value.filter(video => video.community === selectedCommunity.value)
-  return communityVideos
+  const videos = communityVideos.value
+  const total = videos.length
+  
+  // 如果监控数量不超过分屏数，显示全部
+  if (total <= splitMode.value) {
+    return videos
+  }
+  
+  // 计算当前页的起始索引
+  // 每次翻页，保留最后3个，新增6个（9分屏时）
+  // 第1页：索引0（显示0-8）
+  // 第2页：索引6（显示6-14）保留6、7、8，新增9-14
+  // 第3页：索引12（显示12-20）保留12、13、14，新增15-20
+  const videosPerPage = splitMode.value - overlapCount // 每页新增的监控数
+  const startIndex = currentPage.value * videosPerPage
+  
+  // 返回当前页的监控（最多splitMode个）
+  return videos.slice(startIndex, startIndex + splitMode.value)
 })
 
 // 选择视频
@@ -235,6 +276,47 @@ const openFullscreen = (video, index) => {
 const closeFullscreen = () => {
   fullscreenVideo.value = null
   console.log('❌ 关闭全屏显示')
+}
+
+// 滚轮事件处理（翻页）
+let wheelTimeout = null
+const handleWheel = (event) => {
+  // 防抖：避免滚动过快
+  if (wheelTimeout) return
+  
+  wheelTimeout = setTimeout(() => {
+    wheelTimeout = null
+  }, 300) // 300ms内只能翻一次页
+  
+  event.preventDefault()
+  
+  if (event.deltaY > 0) {
+    // 向下滚动 - 下一页
+    if (currentPage.value < totalPages.value - 1) {
+      currentPage.value++
+      console.log(`📄 翻页：第 ${currentPage.value + 1}/${totalPages.value} 页`)
+    }
+  } else {
+    // 向上滚动 - 上一页
+    if (currentPage.value > 0) {
+      currentPage.value--
+      console.log(`📄 翻页：第 ${currentPage.value + 1}/${totalPages.value} 页`)
+    }
+  }
+}
+
+// 监听小区切换，重置页码
+const handleCommunityChange = (communityId) => {
+  selectedCommunity.value = communityId
+  currentPage.value = 0 // 切换小区时重置到第一页
+  console.log(`🏘️ 切换小区，重置到第1页`)
+}
+
+// 监听分屏模式切换，重置页码
+const handleSplitModeChange = (mode) => {
+  splitMode.value = mode
+  currentPage.value = 0 // 切换分屏模式时重置到第一页
+  console.log(`📺 切换到 ${mode} 分屏，重置到第1页`)
 }
 
 // 更新当前时间
@@ -339,6 +421,9 @@ const useFallbackData = () => {
   // 保持原有的静态摄像头数据（已在 allVideos.ref 中定义）
 }
 
+// 视频网格元素引用
+const videoGridRef = ref(null)
+
 // 组件挂载时加载小区数据
 onMounted(() => {
   // 延迟加载，确保百度地图 API 已加载
@@ -352,12 +437,22 @@ onMounted(() => {
       updateCurrentTime()
     }
   }, 1000)
+  
+  // 添加滚轮事件监听
+  if (videoGridRef.value) {
+    videoGridRef.value.addEventListener('wheel', handleWheel, { passive: false })
+  }
 })
 
-// 组件卸载时清理定时器
+// 组件卸载时清理定时器和事件监听
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
+  }
+  
+  // 移除滚轮事件监听
+  if (videoGridRef.value) {
+    videoGridRef.value.removeEventListener('wheel', handleWheel)
   }
 })
 </script>
@@ -415,6 +510,14 @@ onUnmounted(() => {
   background: #00f6ff;
   color: #0a0e27;
   font-weight: bold;
+}
+
+/* 页码信息 */
+.page-info {
+  color: rgba(0, 246, 255, 0.8);
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 8px;
 }
 
 /* 小区选择标签栏 */
@@ -518,29 +621,9 @@ onUnmounted(() => {
   flex: 1;
   display: grid;
   gap: 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* 禁用滚动条，改用滚轮翻页 */
   align-content: start;
   padding-right: 8px;
-}
-
-/* 滚动条样式 */
-.video-grid::-webkit-scrollbar {
-  width: 8px;
-}
-
-.video-grid::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.video-grid::-webkit-scrollbar-thumb {
-  background: rgba(0, 246, 255, 0.3);
-  border-radius: 4px;
-}
-
-.video-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 246, 255, 0.5);
 }
 
 /* 9分屏：3列，自动行 */
