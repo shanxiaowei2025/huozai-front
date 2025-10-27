@@ -8,6 +8,12 @@
         实时视频监控（{{ splitMode }}分屏）
       </span>
       
+      <!-- 双击全屏提示 -->
+      <span class="fullscreen-tip">
+        <span class="tip-icon">💡</span>
+        双击视频可全屏查看
+      </span>
+      
       <!-- 分屏切换按钮 -->
       <div class="controls">
         <button 
@@ -47,7 +53,36 @@
         <span class="community-icon">🏘️</span>
         <span>{{ community.name }}</span>
         <span class="camera-count">{{ community.cameraCount }}个</span>
-        <span v-if="community.distance" class="distance-badge">{{ (community.distance / 1000).toFixed(1) }}km</span>
+        <span v-if="community.distance" class="distance-badge"></span>
+      </button>
+    </div>
+
+    <!-- 翻页控制栏 -->
+    <div v-if="totalPages > 1" class="pagination-bar">
+      <button 
+        @click="prevPage" 
+        :disabled="currentPage === 1"
+        class="page-btn"
+        title="快捷键: ← 左箭头"
+      >
+        ◀ 上一页
+      </button>
+      
+      <div class="page-info">
+        <span class="page-number">{{ currentPage }}</span>
+        <span class="page-divider">/</span>
+        <span class="page-total">{{ totalPages }}</span>
+        <span class="camera-info">（共 {{ communityVideos.length }} 个摄像头）</span>
+        <span class="shortcut-tip">💡 可用滚轮或方向键翻页</span>
+      </div>
+      
+      <button 
+        @click="nextPage" 
+        :disabled="currentPage === totalPages"
+        class="page-btn"
+        title="快捷键: → 右箭头"
+      >
+        下一页 ▶
       </button>
     </div>
 
@@ -215,19 +250,43 @@ const allVideos = ref([
   { name: '槐园-15栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
+// 当前页码
+const currentPage = ref(1)
+
 // 筛选当前小区的所有监控
 const communityVideos = computed(() => {
   return allVideos.value.filter(video => video.community === selectedCommunity.value)
 })
 
-// 删除总页数计算
+// 计算总页数
+const totalPages = computed(() => {
+  const total = communityVideos.value.length
+  return Math.ceil(total / splitMode.value)
+})
 
-// 根据选中的小区和当前页码显示对应的视频（带重叠的分页）
+// 根据选中的小区和当前页码显示对应的视频
 const displayVideos = computed(() => {
   const videos = communityVideos.value
-  // 简单返回当前分屏数量的监控
-  return videos.slice(0, splitMode.value)
+  const start = (currentPage.value - 1) * splitMode.value
+  const end = start + splitMode.value
+  return videos.slice(start, end)
 })
+
+// 上一页
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    console.log(`📄 翻到第 ${currentPage.value} 页`)
+  }
+}
+
+// 下一页
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    console.log(`📄 翻到第 ${currentPage.value} 页`)
+  }
+}
 
 // 选择视频
 const selectVideo = (index) => {
@@ -254,11 +313,15 @@ const closeFullscreen = () => {
 // 监听小区切换
 const handleCommunityChange = (communityId) => {
   selectedCommunity.value = communityId
+  // 切换小区时重置到第一页
+  currentPage.value = 1
 }
 
 // 监听分屏模式切换
 const handleSplitModeChange = (mode) => {
   splitMode.value = mode
+  // 切换分屏模式时重置到第一页
+  currentPage.value = 1
 }
 
 // 更新当前时间
@@ -363,6 +426,43 @@ const useFallbackData = () => {
 // 视频网格元素引用
 const videoGridRef = ref(null)
 
+// 滚轮事件防抖
+let wheelTimeout = null
+
+// 滚轮翻页处理
+const handleWheel = (event) => {
+  if (totalPages.value <= 1) return
+  
+  // 防抖处理 - 避免翻页过快
+  if (wheelTimeout) return
+  
+  event.preventDefault()
+  
+  if (event.deltaY > 0) {
+    // 向下滚动 -> 下一页
+    nextPage()
+  } else {
+    // 向上滚动 -> 上一页
+    prevPage()
+  }
+  
+  // 设置防抖延迟（800ms）
+  wheelTimeout = setTimeout(() => {
+    wheelTimeout = null
+  }, 800)
+}
+
+// 键盘翻页处理
+const handleKeyboard = (event) => {
+  if (totalPages.value <= 1) return
+  
+  if (event.key === 'ArrowLeft') {
+    prevPage()
+  } else if (event.key === 'ArrowRight') {
+    nextPage()
+  }
+}
+
 // 组件挂载时加载小区数据
 onMounted(() => {
   // 延迟加载，确保百度地图 API 已加载
@@ -376,13 +476,29 @@ onMounted(() => {
       updateCurrentTime()
     }
   }, 1000)
+  
+  // 添加滚轮事件监听（在视频网格上）
+  if (videoGridRef.value) {
+    videoGridRef.value.addEventListener('wheel', handleWheel, { passive: false })
+  }
+  
+  // 添加键盘事件监听
+  window.addEventListener('keydown', handleKeyboard)
 })
 
-// 组件卸载时清理定时器
+// 组件卸载时清理定时器和事件监听
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
   }
+  
+  // 移除滚轮事件监听
+  if (videoGridRef.value) {
+    videoGridRef.value.removeEventListener('wheel', handleWheel)
+  }
+  
+  // 移除键盘事件监听
+  window.removeEventListener('keydown', handleKeyboard)
 })
 </script>
 
@@ -413,9 +529,58 @@ onUnmounted(() => {
   font-size: 24px;
 }
 
+/* 全屏提示 */
+.fullscreen-tip {
+  margin-left: auto;
+  margin-right: 20px;
+  padding: 6px 14px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 16px;
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: pulse-tip 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.fullscreen-tip:hover {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: rgba(139, 92, 246, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.tip-icon {
+  font-size: 14px;
+  animation: glow-tip 2s ease-in-out infinite;
+}
+
+@keyframes pulse-tip {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+  }
+}
+
+@keyframes glow-tip {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.5);
+  }
+}
+
 /* 控制按钮组 */
 .controls {
-  margin-left: auto;
+  margin-left: 0;
   display: flex;
   gap: 8px;
 }
@@ -520,6 +685,84 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.3);
   color: white;
+}
+
+/* 翻页控制栏 */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 20px;
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 246, 255, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.page-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  color: #00f6ff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+}
+
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.page-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #00f6ff;
+  text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
+}
+
+.page-divider {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.page-total {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.camera-info {
+  margin-left: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.shortcut-tip {
+  margin-left: 12px;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  color: #10b981;
+  font-size: 11px;
+  font-weight: normal;
 }
 
 /* 加载和错误提示 */
