@@ -30,14 +30,38 @@
 
     <!-- 主内容区域 -->
     <div class="main-content">
-      <!-- 左侧 GIS 地图 -->
-      <div class="left-section">
-        <GisMap />
-      </div>
+      <!-- 左侧+中间区域：地图/监控切换 -->
+      <div class="left-center-section">
+        <!-- 模式切换标签 -->
+        <div class="mode-tabs">
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeMode === 'map' }"
+            @click="activeMode = 'map'"
+          >
+            🗺️ 地图模式
+          </button>
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeMode === 'monitor' }"
+            @click="activeMode = 'monitor'"
+          >
+            📹 监控模式
+          </button>
+        </div>
 
-      <!-- 中间视频监控墙 -->
-      <div class="center-section">
-        <VideoWall />
+        <!-- 内容区域 -->
+        <div class="mode-content">
+          <!-- 地图模式：显示 GIS 地图 -->
+          <div v-show="activeMode === 'map'" class="mode-panel">
+            <GisMap />
+          </div>
+
+          <!-- 监控模式：显示视频监控墙 -->
+          <div v-show="activeMode === 'monitor'" class="mode-panel">
+            <VideoWall />
+          </div>
+        </div>
       </div>
 
       <!-- 右侧报警列表 -->
@@ -67,6 +91,9 @@ import AlarmList from '../components/AlarmList.vue'
 // 定义响应式数据：是否全屏
 const isFullscreen = ref(false)
 const dashboardRef = ref(null)
+
+// 定义响应式数据：当前模式（地图/监控）
+const activeMode = ref('map') // 默认显示地图模式
 
 // 切换全屏功能
 const toggleFullscreen = () => {
@@ -145,24 +172,73 @@ onMounted(() => {
 .main-content {
   flex: 1; /* 占据剩余空间 */
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr; /* 左:中:右 = 1:2:1 */
+  grid-template-columns: 3fr 1fr; /* 左侧+中间(合并):右侧 = 3:1 */
   gap: 20px;
   min-height: 0; /* 防止内容溢出 */
 }
 
-/* 左侧区域 */
-.left-section {
+/* 左侧+中间合并区域 */
+.left-center-section {
   background: rgba(10, 14, 39, 0.6);
   border-radius: 12px;
   border: 1px solid rgba(0, 246, 255, 0.2);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 中间区域 */
-.center-section {
-  background: rgba(10, 14, 39, 0.6);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 246, 255, 0.2);
+/* 模式切换标签栏 */
+.mode-tabs {
+  display: flex;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 20px;
+  border-bottom: 2px solid rgba(0, 246, 255, 0.2);
+}
+
+/* 标签按钮 */
+.tab-btn {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid rgba(0, 246, 255, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin: 0 5px;
+}
+
+.tab-btn:hover {
+  background: rgba(0, 246, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 246, 255, 0.5);
+}
+
+/* 激活状态的标签 */
+.tab-btn.active {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border-color: #06b6d4;
+  color: white;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+}
+
+/* 内容区域 */
+.mode-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 模式面板 */
+.mode-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -210,7 +286,16 @@ onMounted(() => {
 @media (max-width: 1400px) {
   .main-content {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
+  }
+  
+  .mode-tabs {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .tab-btn {
+    margin: 0;
   }
 }
 </style>
