@@ -536,7 +536,6 @@ onUnmounted(() => {
 
 /* 翻页提示 */
 .pagination-tip {
-  margin-left: auto;
   padding: 6px 14px;
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.4);
@@ -677,7 +676,7 @@ onUnmounted(() => {
 
 /* 控制按钮组 */
 .controls {
-  margin-left: 0;
+  margin-left: auto;
   display: flex;
   gap: 8px;
 }
