@@ -1,31 +1,29 @@
 <template>
   <div class="dashboard" ref="dashboardRef" :class="{ 'fullscreen': isFullscreen }">
-    <!-- 顶部统计卡片区域 -->
-    <div class="top-stats">
-      <StatCard 
-        icon="📊" 
-        title="今日报警" 
-        :value="23" 
-        color="#8b5cf6"
-      />
-      <StatCard 
-        icon="⚡" 
-        title="处置率" 
-        value="98%" 
-        color="#ec4899"
-      />
-      <StatCard 
-        icon="🟢" 
-        title="设备在线率" 
-        value="99.5%" 
-        color="#06b6d4"
-      />
-      <StatCard 
-        icon="📹" 
-        title="总摄像机" 
-        :value="500" 
-        color="#10b981"
-      />
+    <!-- 顶部标题横幅 -->
+    <div class="page-header">
+      <div class="header-bg"></div>
+      <h1 class="header-title">
+        <span class="title-icon">📊</span>
+        <span class="title-text">定兴县火灾暨高空抛物监控预警</span>
+      </h1>
+      <div class="header-actions">
+        <button class="header-btn" @click="navigateTo('/devices')">
+          <span class="btn-icon">📹</span>
+          <span>设备管理</span>
+        </button>
+        <button class="header-btn" @click="navigateTo('/settings')">
+          <span class="btn-icon">⚙️</span>
+          <span>系统设置</span>
+        </button>
+      </div>
+      <div class="header-datetime">
+        <div class="datetime-row">
+          <div class="datetime-date">{{ currentDate }}</div>
+          <div class="datetime-week">{{ currentWeek }}</div>
+        </div>
+        <div class="datetime-time">{{ currentTime }}</div>
+      </div>
     </div>
 
     <!-- 主内容区域 -->
@@ -80,13 +78,16 @@
 
 <script setup>
 // Vue3 的响应式数据，使用 ref 创建
-import { ref, onMounted, provide } from 'vue'
+import { ref, onMounted, onUnmounted, provide } from 'vue'
+import { useRouter } from 'vue-router'
 
 // 导入子组件
-import StatCard from '../components/StatCard.vue'
 import GisMap from '../components/GisMap.vue'
 import VideoWall from '../components/VideoWall.vue'
 import AlarmList from '../components/AlarmList.vue'
+
+// 路由导航
+const router = useRouter()
 
 // 定义响应式数据：是否全屏
 const isFullscreen = ref(false)
@@ -94,6 +95,12 @@ const dashboardRef = ref(null)
 
 // 定义响应式数据：当前模式（地图/监控）
 const activeMode = ref('map') // 默认显示地图模式
+
+// 定义响应式数据：实时时间
+const currentDate = ref('')
+const currentTime = ref('')
+const currentWeek = ref('')
+let timeInterval = null
 
 // 共享报警数据 - 用于在子组件间传递
 const sharedAlarms = ref([])
@@ -136,14 +143,52 @@ const toggleFullscreen = () => {
   }
 }
 
+// 导航到指定页面
+const navigateTo = (path) => {
+  router.push(path)
+}
+
+// 更新时间函数
+const updateTime = () => {
+  const now = new Date()
+  
+  // 格式化日期：2025-10-27
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  currentDate.value = `${year}-${month}-${day}`
+  
+  // 格式化时间：14:32:15
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  currentTime.value = `${hours}:${minutes}:${seconds}`
+  
+  // 格式化星期：星期一
+  const weeks = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  currentWeek.value = weeks[now.getDay()]
+}
+
 // 监听全屏状态变化（用户按 ESC 退出全屏）
 onMounted(() => {
+  // 初始化时间
+  updateTime()
+  // 每秒更新时间
+  timeInterval = setInterval(updateTime, 1000)
+  
   document.addEventListener('fullscreenchange', () => {
     isFullscreen.value = !!document.fullscreenElement
   })
   document.addEventListener('webkitfullscreenchange', () => {
     isFullscreen.value = !!document.webkitFullscreenElement
   })
+})
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (timeInterval) {
+    clearInterval(timeInterval)
+  }
 })
 </script>
 
@@ -171,12 +216,170 @@ onMounted(() => {
   padding: 20px;
 }
 
-/* 顶部统计卡片区域 */
-.top-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4列均分 */
-  gap: 20px;
-  height: 150px;
+/* 顶部标题横幅 */
+.page-header {
+  position: relative;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(10, 14, 39, 0.6);
+  border: 1px solid rgba(0, 246, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 246, 255, 0.2);
+}
+
+/* 标题背景动画 */
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(6, 182, 212, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(139, 92, 246, 0.1) 75%,
+    rgba(6, 182, 212, 0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: headerGlow 8s linear infinite;
+}
+
+@keyframes headerGlow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+/* 标题文字 */
+.header-title {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0;
+  font-size: 36px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(0, 246, 255, 0.5);
+}
+
+.title-icon {
+  font-size: 42px;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.title-text {
+  background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 3px;
+  font-weight: 900;
+}
+
+/* 头部操作按钮区域 */
+.header-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: auto;
+  margin-right: 30px;
+}
+
+.header-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.1);
+}
+
+.header-btn:hover {
+  background: rgba(6, 182, 212, 0.25);
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  transform: translateY(-2px);
+}
+
+.header-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+/* 右侧时间显示 */
+.header-datetime {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: #fff;
+}
+
+.datetime-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.datetime-date {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 2px;
+}
+
+.datetime-week {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 2px;
+}
+
+.datetime-time {
+  font-size: 32px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #00f6ff 0%, #06b6d4 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Courier New', 'Monaco', monospace;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  line-height: 1;
 }
 
 /* 主内容区域 */

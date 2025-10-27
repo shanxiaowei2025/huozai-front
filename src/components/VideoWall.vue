@@ -8,6 +8,12 @@
         实时视频监控（{{ splitMode }}分屏）
       </span>
       
+      <!-- 翻页提示（仅在有多页时显示） -->
+      <span v-if="totalPages > 1" class="pagination-tip">
+        <span class="tip-icon">💡</span>
+        可用滚轮或方向键翻页
+      </span>
+      
       <!-- 双击全屏提示 -->
       <span class="fullscreen-tip">
         <span class="tip-icon">💡</span>
@@ -73,7 +79,6 @@
         <span class="page-divider">/</span>
         <span class="page-total">{{ totalPages }}</span>
         <span class="camera-info">（共 {{ communityVideos.length }} 个摄像头）</span>
-        <span class="shortcut-tip">💡 可用滚轮或方向键翻页</span>
       </div>
       
       <button 
@@ -529,9 +534,33 @@ onUnmounted(() => {
   font-size: 24px;
 }
 
+/* 翻页提示 */
+.pagination-tip {
+  margin-left: auto;
+  padding: 6px 14px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  color: #10b981;
+  font-size: 13px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pagination-tip:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
 /* 全屏提示 */
 .fullscreen-tip {
-  margin-left: auto;
   margin-right: 20px;
   padding: 6px 14px;
   background: rgba(139, 92, 246, 0.15);

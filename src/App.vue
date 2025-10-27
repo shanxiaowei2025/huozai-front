@@ -1,9 +1,6 @@
 <template>
   <div class="app-container">
-    <!-- 左侧导航栏 -->
-    <Sidebar />
-    
-    <!-- 右侧主内容区 -->
+    <!-- 主内容区 -->
     <div class="main-content">
       <router-view />
     </div>
@@ -11,7 +8,7 @@
 </template>
 
 <script setup>
-import Sidebar from './components/Sidebar.vue'
+// 移除了Sidebar导航栏
 </script>
 
 <style>
@@ -34,14 +31,13 @@ body {
 
 <style scoped>
 .app-container {
-  display: flex;
   width: 100%;
   height: 100vh;
   overflow: hidden;
 }
 
 .main-content {
-  flex: 1;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
 }
