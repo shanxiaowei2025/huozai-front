@@ -80,7 +80,7 @@
 
 <script setup>
 // Vue3 的响应式数据，使用 ref 创建
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, provide } from 'vue'
 
 // 导入子组件
 import StatCard from '../components/StatCard.vue'
@@ -94,6 +94,17 @@ const dashboardRef = ref(null)
 
 // 定义响应式数据：当前模式（地图/监控）
 const activeMode = ref('map') // 默认显示地图模式
+
+// 共享报警数据 - 用于在子组件间传递
+const sharedAlarms = ref([])
+
+// 提供报警数据给子组件
+provide('alarmData', {
+  alarms: sharedAlarms,
+  updateAlarms: (newAlarms) => {
+    sharedAlarms.value = newAlarms
+  }
+})
 
 // 切换全屏功能
 const toggleFullscreen = () => {
