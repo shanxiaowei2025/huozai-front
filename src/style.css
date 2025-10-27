@@ -1,0 +1,53 @@
+/* 全局样式文件 */
+
+/* 引入思源黑体或其他适合大屏的字体 */
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #fff;
+  background-color: #0a0e27;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 246, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* 通用动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* 边框发光效果 */
+.glow-border {
+  box-shadow: 0 0 10px rgba(0, 246, 255, 0.5),
+              inset 0 0 10px rgba(0, 246, 255, 0.1);
+}
+
+/* 渐变背景 */
+.gradient-bg {
+  background: linear-gradient(135deg, 
+    rgba(0, 246, 255, 0.1) 0%, 
+    rgba(147, 51, 234, 0.1) 100%);
+}
+
