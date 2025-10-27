@@ -332,15 +332,12 @@ const fetchRealLocations = async () => {
 
 // 生成随机楼栋和楼层信息
 const generateBuildingInfo = () => {
-  const buildings = ['1栋', '2栋', '3栋', '4栋', '5栋', '6栋', '8栋', '10栋', '12栋']
-  const floors = ['1F', '2F', '3F', '4F', '5F', '6F', '7F', '8F', '9F', '10F', '11F', '12F']
-  const areas = ['楼道', '走廊', '电梯口', '楼梯间']
+  const buildingNum = Math.floor(Math.random() * 5) + 1 // 1-5栋
+  const floorGroupIndex = Math.floor(Math.random() * 5) // 0-4，对应5个楼层段
+  const floorStart = floorGroupIndex * 5 + 1
+  const floorEnd = floorStart + 4
   
-  const building = buildings[Math.floor(Math.random() * buildings.length)]
-  const floor = floors[Math.floor(Math.random() * floors.length)]
-  const area = Math.random() > 0.5 ? areas[Math.floor(Math.random() * areas.length)] : ''
-  
-  return area ? `${building}-${floor}${area}` : `${building}-${floor}`
+  return ` ${buildingNum}栋(${floorStart}-${floorEnd}层)`
 }
 
 // 从真实地点生成位置字符串

@@ -202,57 +202,57 @@ const error = ref(null)
 // 所有视频数据（按小区分组）
 const allVideos = ref([
   // A小区摄像头
-  { name: 'A栋-3F', community: 'a', hasAlarm: true, alarmType: '火灾报警', bgColor: 'linear-gradient(135deg, #dc2626, #991b1b)' },
-  { name: 'B栋-5F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'C栋-8F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'D栋-2F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'E栋-12F', community: 'a', hasAlarm: true, alarmType: '高空抛物', bgColor: 'linear-gradient(135deg, #d97706, #92400e)' },
-  { name: 'F栋-6F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'G栋-4F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'H栋-7F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'I栋-9F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'J栋-1F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'K栋-10F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: 'L栋-3F', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 1栋(1-5层)', community: 'a', hasAlarm: true, alarmType: '火灾报警', bgColor: 'linear-gradient(135deg, #dc2626, #991b1b)' },
+  { name: 'A小区 1栋(6-10层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 1栋(11-15层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 1栋(16-20层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 1栋(21-25层)', community: 'a', hasAlarm: true, alarmType: '高空抛物', bgColor: 'linear-gradient(135deg, #d97706, #92400e)' },
+  { name: 'A小区 2栋(1-5层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 2栋(6-10层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 2栋(11-15层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 2栋(16-20层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 3栋(1-5层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 3栋(6-10层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'A小区 3栋(11-15层)', community: 'a', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
   
   // B小区摄像头
-  { name: '1号楼-1F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '2号楼-2F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '3号楼-5F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '4号楼-3F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '5号楼-8F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '6号楼-4F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '7号楼-6F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '8号楼-7F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '9号楼-9F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '10号楼-2F', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 1栋(1-5层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 1栋(6-10层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 1栋(11-15层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 2栋(1-5层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 2栋(6-10层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 2栋(11-15层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 3栋(1-5层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 3栋(6-10层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 3栋(11-15层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'B小区 4栋(1-5层)', community: 'b', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
   
   // C小区摄像头
-  { name: '东区-1F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '西区-2F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '南区-3F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '北区-4F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '中心-5F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '东门-1F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '西门-1F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '停车场-1F', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 1栋(1-5层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 1栋(6-10层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 2栋(1-5层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 2栋(6-10层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 3栋(1-5层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 3栋(6-10层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 4栋(1-5层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'C小区 4栋(6-10层)', community: 'c', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
   
   // D小区摄像头
-  { name: '松园-1栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '竹园-2栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '梅园-3栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '兰园-4栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '菊园-5栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '荷园-6栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '桂园-7栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '樱园-8栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '桃园-9栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '柳园-10栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '梨园-11栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '杏园-12栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '枫园-13栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '柏园-14栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { name: '槐园-15栋', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
+  { name: 'D小区 1栋(1-5层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 1栋(6-10层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 1栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 2栋(1-5层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 2栋(6-10层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 2栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 3栋(1-5层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 3栋(6-10层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 3栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 4栋(1-5层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 4栋(6-10层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 4栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 5栋(1-5层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 5栋(6-10层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { name: 'D小区 5栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
 // 当前页码
@@ -391,11 +391,17 @@ const generateCamerasForCommunities = (communitiesList) => {
     
     // 为每个小区生成摄像头
     for (let i = 0; i < cameraCount; i++) {
-      const floors = ['1F', '2F', '3F', '4F', '5F', '6F', '7F', '8F', '9F', '10F']
+      // 计算栋号（从1开始）
+      const buildingNum = Math.floor(i / 5) + 1
+      // 计算楼层范围（每5层一组）
+      const floorGroupIndex = i % 5
+      const floorStart = floorGroupIndex * 5 + 1
+      const floorEnd = floorStart + 4
+      
       const hasAlarm = Math.random() < 0.1 // 10% 概率有报警
       
       newVideos.push({
-        name: `${community.name}-${floors[i % floors.length]}`,
+        name: `${community.name} ${buildingNum}栋(${floorStart}-${floorEnd}层)`,
         community: community.id,
         hasAlarm: hasAlarm,
         alarmType: hasAlarm ? (Math.random() > 0.5 ? '火灾报警' : '高空抛物') : null,
