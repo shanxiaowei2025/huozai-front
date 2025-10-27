@@ -5,7 +5,7 @@
     <div class="module-title">
       <span class="icon">📹</span>
       <span>
-        实时视频监控（{{ displayVideos.length }}个 - {{ splitMode }}分屏）
+        实时视频监控（{{ splitMode }}分屏）
         <span v-if="totalPages > 1" class="page-info">
           - 第 {{ currentPage + 1 }}/{{ totalPages }} 页
         </span>
@@ -241,8 +241,16 @@ const displayVideos = computed(() => {
   const videos = communityVideos.value
   const total = videos.length
   
+  console.log('📊 displayVideos计算:', {
+    总监控数: total,
+    分屏模式: splitMode.value,
+    当前页: currentPage.value,
+    重叠数: overlapCount
+  })
+  
   // 如果监控数量不超过分屏数，显示全部
   if (total <= splitMode.value) {
+    console.log('✅ 监控数量不超过分屏数，显示全部', videos.length, '个')
     return videos
   }
   
@@ -254,8 +262,16 @@ const displayVideos = computed(() => {
   const videosPerPage = splitMode.value - overlapCount // 每页新增的监控数
   const startIndex = currentPage.value * videosPerPage
   
+  const result = videos.slice(startIndex, startIndex + splitMode.value)
+  console.log('📹 分页显示:', {
+    每页新增: videosPerPage,
+    起始索引: startIndex,
+    结束索引: startIndex + splitMode.value,
+    实际显示: result.length
+  })
+  
   // 返回当前页的监控（最多splitMode个）
-  return videos.slice(startIndex, startIndex + splitMode.value)
+  return result
 })
 
 // 选择视频
