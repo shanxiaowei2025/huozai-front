@@ -77,7 +77,7 @@
       >
         <!-- 视频标签 -->
         <div class="video-label">
-          <span v-if="video.hasAlarm" class="alarm-icon">🔥</span>
+          <span v-if="video.hasAlarm" class="alarm-icon">{{ getAlarmIcon(video.alarmType) }}</span>
           <span>{{ video.name }}</span>
         </div>
 
@@ -303,6 +303,16 @@ if (alarmData) {
   watch(() => alarmData.alarms.value, () => {
     updateVideoAlarmStatus()
   }, { deep: true, immediate: true })
+}
+
+// 根据报警类型获取对应的图标
+const getAlarmIcon = (alarmType) => {
+  const iconMap = {
+    '火灾报警': '🔥',
+    '高空抛物': '📦',
+    '烟雾报警': '💨'
+  }
+  return iconMap[alarmType] || '🔥' // 默认返回火焰图标
 }
 
 // 选择视频
