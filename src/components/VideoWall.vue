@@ -229,15 +229,26 @@ const allVideos = ref([
   { name: 'D小区 5栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
+// 当前页码
+const currentPage = ref(0)
+
 // 筛选当前小区的所有监控
 const communityVideos = computed(() => {
   return allVideos.value.filter(video => video.community === selectedCommunity.value)
 })
 
-// 显示的视频（直接显示所有当前小区的监控）
+// 总页数
+const totalPages = computed(() => {
+  const total = communityVideos.value.length
+  return Math.ceil(total / splitMode.value)
+})
+
+// 显示的视频（当前页的视频）
 const displayVideos = computed(() => {
   const videos = communityVideos.value
-  return videos.slice(0, splitMode.value)
+  const start = currentPage.value * splitMode.value
+  const end = start + splitMode.value
+  return videos.slice(start, end)
 })
 
 // 根据报警数据更新视频的报警状态
@@ -310,16 +321,63 @@ const closeFullscreen = () => {
   console.log('❌ 关闭全屏显示')
 }
 
-// 删除滚轮翻页事件处理
+// 上一页
+const prevPage = () => {
+  if (currentPage.value > 0) {
+    currentPage.value--
+    console.log(`📄 翻到第 ${currentPage.value + 1} 页`)
+  }
+}
+
+// 下一页
+const nextPage = () => {
+  if (currentPage.value < totalPages.value - 1) {
+    currentPage.value++
+    console.log(`📄 翻到第 ${currentPage.value + 1} 页`)
+  }
+}
+
+// 视频网格元素引用
+const videoGridRef = ref(null)
+
+// 滚轮事件防抖
+let wheelTimeout = null
+
+// 滚轮翻页处理
+const handleWheel = (event) => {
+  if (totalPages.value <= 1) return
+  
+  // 防抖处理 - 避免翻页过快
+  if (wheelTimeout) return
+  
+  event.preventDefault()
+  
+  if (event.deltaY > 0) {
+    // 向下滚动 -> 下一页
+    nextPage()
+  } else {
+    // 向上滚动 -> 上一页
+    prevPage()
+  }
+  
+  // 设置防抖延迟（800ms）
+  wheelTimeout = setTimeout(() => {
+    wheelTimeout = null
+  }, 800)
+}
 
 // 监听小区切换
 const handleCommunityChange = (communityId) => {
   selectedCommunity.value = communityId
+  // 切换小区时重置到第一页
+  currentPage.value = 0
 }
 
 // 监听分屏模式切换
 const handleSplitModeChange = (mode) => {
   splitMode.value = mode
+  // 切换分屏模式时重置到第一页
+  currentPage.value = 0
 }
 
 // 更新当前时间
@@ -427,15 +485,6 @@ const useFallbackData = () => {
   // 保持原有的静态摄像头数据（已在 allVideos.ref 中定义）
 }
 
-// 视频网格元素引用
-const videoGridRef = ref(null)
-
-// 滚轮滑动处理（用于滚动视频网格）
-const handleWheel = (event) => {
-  // 不阻止默认行为，让它自然滚动
-  // 这样用户可以上下滚动查看更多视频
-}
-
 // 组件挂载时加载小区数据
 onMounted(() => {
   // 延迟加载，确保百度地图 API 已加载
@@ -449,12 +498,22 @@ onMounted(() => {
       updateCurrentTime()
     }
   }, 1000)
+  
+  // 添加滚轮事件监听（在视频网格上）
+  if (videoGridRef.value) {
+    videoGridRef.value.addEventListener('wheel', handleWheel, { passive: false })
+  }
 })
 
-// 组件卸载时清理定时器
+// 组件卸载时清理定时器和事件监听
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
+  }
+  
+  // 移除滚轮事件监听
+  if (videoGridRef.value) {
+    videoGridRef.value.removeEventListener('wheel', handleWheel)
   }
 })
 </script>
@@ -699,48 +758,26 @@ onUnmounted(() => {
   flex: 1;
   display: grid;
   gap: 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 8px;
+  overflow: hidden;
   min-height: 0; /* 重要：允许flex子项缩小 */
-}
-
-/* 自定义滚动条样式 */
-.video-grid::-webkit-scrollbar {
-  width: 8px;
-}
-
-.video-grid::-webkit-scrollbar-track {
-  background: rgba(0, 20, 40, 0.3);
-  border-radius: 4px;
-}
-
-.video-grid::-webkit-scrollbar-thumb {
-  background: rgba(0, 246, 255, 0.3);
-  border-radius: 4px;
-  transition: background 0.3s;
-}
-
-.video-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 246, 255, 0.5);
 }
 
 /* 9分屏：3x3网格 */
 .grid-9 {
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(200px, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 
 /* 16分屏：4x4网格 */
 .grid-16 {
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(150px, 1fr);
+  grid-template-rows: repeat(4, 1fr);
 }
 
 /* 25分屏：5x5网格 */
 .grid-25 {
   grid-template-columns: repeat(5, 1fr);
-  grid-auto-rows: minmax(120px, 1fr);
+  grid-template-rows: repeat(5, 1fr);
 }
 
 /* 单个视频项 */
