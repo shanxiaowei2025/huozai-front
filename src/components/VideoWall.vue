@@ -147,8 +147,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
 import { searchCommunities, searchNearbyCommunities } from '@/services/baiduMapService'
+
+// 注入报警数据
+const alarmData = inject('alarmData', null)
 
 // 分屏模式：9/16/25
 const splitMode = ref(9)
@@ -236,6 +239,56 @@ const displayVideos = computed(() => {
   const videos = communityVideos.value
   return videos.slice(0, splitMode.value)
 })
+
+// 根据报警数据更新视频的报警状态
+const updateVideoAlarmStatus = () => {
+  if (!alarmData || !alarmData.alarms) return
+  
+  const pendingAlarms = alarmData.alarms.value.filter(alarm => alarm.status === 'pending')
+  
+  console.log('🔄 更新视频报警状态，未处置报警数量:', pendingAlarms.length)
+  
+  // 重置所有视频的报警状态
+  allVideos.value.forEach(video => {
+    video.hasAlarm = false
+    video.alarmType = ''
+    video.bgColor = 'linear-gradient(135deg, #1e293b, #0f172a)'
+  })
+  
+  // 根据报警列表设置报警状态
+  pendingAlarms.forEach(alarm => {
+    // 查找匹配的视频
+    const matchedVideo = allVideos.value.find(video => {
+      // 比较视频名称和报警位置
+      return video.name === alarm.location
+    })
+    
+    if (matchedVideo) {
+      matchedVideo.hasAlarm = true
+      matchedVideo.alarmType = alarm.type
+      
+      // 根据报警类型设置背景色
+      if (alarm.type === '火灾报警') {
+        matchedVideo.bgColor = 'linear-gradient(135deg, #dc2626, #991b1b)'
+      } else if (alarm.type === '高空抛物') {
+        matchedVideo.bgColor = 'linear-gradient(135deg, #d97706, #92400e)'
+      } else if (alarm.type === '烟雾报警') {
+        matchedVideo.bgColor = 'linear-gradient(135deg, #7c2d12, #431407)'
+      }
+      
+      console.log('✅ 匹配到报警视频:', matchedVideo.name, '- 类型:', alarm.type)
+    } else {
+      console.log('⚠️ 未找到匹配视频:', alarm.location)
+    }
+  })
+}
+
+// 监听报警数据变化
+if (alarmData) {
+  watch(() => alarmData.alarms.value, () => {
+    updateVideoAlarmStatus()
+  }, { deep: true, immediate: true })
+}
 
 // 选择视频
 const selectVideo = (index) => {
@@ -338,16 +391,13 @@ const generateCamerasForCommunities = (communitiesList) => {
       const floorStart = floorGroupIndex * 5 + 1
       const floorEnd = floorStart + 4
       
-      const hasAlarm = Math.random() < 0.1 // 10% 概率有报警
-      
+      // 初始状态无报警，报警状态由 updateVideoAlarmStatus() 函数根据实时报警列表动态更新
       newVideos.push({
         name: `${community.name} ${buildingNum}栋(${floorStart}-${floorEnd}层)`,
         community: community.id,
-        hasAlarm: hasAlarm,
-        alarmType: hasAlarm ? (Math.random() > 0.5 ? '火灾报警' : '高空抛物') : null,
-        bgColor: hasAlarm 
-          ? (Math.random() > 0.5 ? 'linear-gradient(135deg, #dc2626, #991b1b)' : 'linear-gradient(135deg, #d97706, #92400e)')
-          : 'linear-gradient(135deg, #1e293b, #0f172a)',
+        hasAlarm: false,
+        alarmType: '',
+        bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)',
         lng: community.lng,
         lat: community.lat
       })
@@ -356,6 +406,9 @@ const generateCamerasForCommunities = (communitiesList) => {
   
   allVideos.value = newVideos
   console.log('📹 生成摄像头数据：', newVideos.length, '个')
+  
+  // 立即同步报警状态
+  updateVideoAlarmStatus()
 }
 
 // 使用备用数据（当 API 失败时）
