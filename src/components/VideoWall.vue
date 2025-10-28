@@ -154,6 +154,8 @@ import { searchCommunities, searchNearbyCommunities } from '@/services/baiduMapS
 const alarmData = inject('alarmData', null)
 // 注入小区数据共享机制
 const communityData = inject('communityData', null)
+// 注入视频数据共享机制
+const videoData = inject('videoData', null)
 
 // 分屏模式：9/16/25
 const splitMode = ref(9)
@@ -477,6 +479,12 @@ const generateCamerasForCommunities = (communitiesList) => {
   
   allVideos.value = newVideos
   console.log('📹 生成摄像头数据：', newVideos.length, '个')
+  
+  // 共享视频数据给其他组件（如 AlarmList）
+  if (videoData) {
+    videoData.updateVideos(newVideos)
+    console.log('📤 已共享视频数据给其他组件')
+  }
   
   // 立即同步报警状态
   updateVideoAlarmStatus()

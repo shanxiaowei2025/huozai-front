@@ -106,6 +106,8 @@ let timeInterval = null
 const sharedAlarms = ref([])
 // 共享小区数据 - 用于确保报警列表和视频监控使用相同的小区
 const sharedCommunities = ref([])
+// 共享视频数据 - 用于确保报警列表使用真实存在的摄像头位置
+const sharedVideos = ref([])
 
 // 提供报警数据给子组件
 provide('alarmData', {
@@ -120,6 +122,14 @@ provide('communityData', {
   communities: sharedCommunities,
   updateCommunities: (newCommunities) => {
     sharedCommunities.value = newCommunities
+  }
+})
+
+// 提供视频数据给子组件
+provide('videoData', {
+  videos: sharedVideos,
+  updateVideos: (newVideos) => {
+    sharedVideos.value = newVideos
   }
 })
 

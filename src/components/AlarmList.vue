@@ -183,6 +183,14 @@ const sharedCommunities = computed(() => {
   return communityData?.communities?.value || []
 })
 
+// 注入视频数据共享机制（用于获取真实的摄像头位置）
+const videoData = inject('videoData', null)
+
+// 从 VideoWall 共享的视频数据
+const sharedVideos = computed(() => {
+  return videoData?.videos?.value || []
+})
+
 // 从百度地图获取的真实地点数据
 const realLocations = ref([])
 const isLoadingLocations = ref(false)
@@ -344,7 +352,21 @@ const generateBuildingInfo = () => {
 
 // 从真实地点生成位置字符串
 const generateLocationFromReal = () => {
-  // 优先使用从 VideoWall 共享的小区数据，确保报警位置与监控摄像头名称一致
+  // 优先从共享的摄像头列表中随机选择一个，确保栋号和楼层范围真实存在
+  if (sharedVideos.value.length > 0) {
+    const randomVideo = sharedVideos.value[Math.floor(Math.random() * sharedVideos.value.length)]
+    console.log('📍 从共享的摄像头列表中选择位置:', randomVideo.name)
+    
+    return {
+      displayName: randomVideo.name,
+      fullAddress: '河北省保定市定兴县',
+      poi: { lng: randomVideo.lng, lat: randomVideo.lat },
+      communityName: randomVideo.name.split(' ')[0], // 提取小区名
+      buildingInfo: randomVideo.name.substring(randomVideo.name.indexOf(' ')) // 提取栋号和楼层
+    }
+  }
+  
+  // 备选方案：使用旧的生成逻辑
   let locations = []
   
   if (sharedCommunities.value.length > 0) {
@@ -630,6 +652,14 @@ watch(alarms, () => {
 watch(sharedCommunities, (newCommunities) => {
   if (newCommunities && newCommunities.length > 0) {
     console.log('📥 收到共享小区数据，更新报警位置信息')
+    updateAlarmsWithRealLocations()
+  }
+}, { immediate: true })
+
+// 监听共享视频数据变化，更新现有报警的位置信息
+watch(sharedVideos, (newVideos) => {
+  if (newVideos && newVideos.length > 0) {
+    console.log('📥 收到共享视频数据，更新报警位置信息')
     updateAlarmsWithRealLocations()
   }
 }, { immediate: true })
