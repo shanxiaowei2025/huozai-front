@@ -87,7 +87,6 @@
         <span class="community-icon">🏘️</span>
         <span>{{ community.name }}</span>
         <span class="camera-count">{{ community.cameraCount }}个</span>
-        <span v-if="community.distance" class="distance-badge"></span>
       </button>
     </div>
 
@@ -777,23 +776,6 @@ onUnmounted(() => {
 
 .community-btn.active .camera-count {
   background: rgba(255, 255, 255, 0.2);
-}
-
-/* 距离标签 */
-.distance-badge {
-  padding: 2px 6px;
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  border-radius: 10px;
-  font-size: 10px;
-  color: #10b981;
-  font-weight: bold;
-}
-
-.community-btn.active .distance-badge {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
 }
 
 /* 加载和错误提示 */
