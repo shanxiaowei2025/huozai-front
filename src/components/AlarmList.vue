@@ -410,16 +410,6 @@ const alarms = ref([
     description: '检测到有物体从高空抛下，请注意安全！'
   },
   {
-    id: 3,
-    type: '火灾误报',
-    icon: '✅',
-    location: '加载中...',
-    time: `${getTodayDateStr()} 14:15:22`,
-    status: 'pending',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    description: '系统误报，已确认无火灾风险。'
-  },
-  {
     id: 5,
     type: '烟雾报警',
     icon: '💨',
