@@ -334,7 +334,7 @@ const fetchRealLocations = async () => {
 
 // 生成随机楼栋和楼层信息
 const generateBuildingInfo = () => {
-  const buildingNum = Math.floor(Math.random() * 5) + 1 // 1-5栋
+  const buildingNum = Math.floor(Math.random() * 3) + 1 // 1-3栋（限制为3栋，避免生成不存在的栋号）
   const floorGroupIndex = Math.floor(Math.random() * 5) // 0-4，对应5个楼层段
   const floorStart = floorGroupIndex * 5 + 1
   const floorEnd = floorStart + 4

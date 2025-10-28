@@ -448,13 +448,18 @@ const generateCamerasForCommunities = (communitiesList) => {
   communitiesList.forEach((community) => {
     const cameraCount = community.cameraCount || 10
     
+    // 限制每个小区最多3栋楼，避免生成不存在的栋号
+    const maxBuildings = 3
+    const camerasPerBuilding = Math.ceil(cameraCount / maxBuildings)
+    
     // 为每个小区生成摄像头
     for (let i = 0; i < cameraCount; i++) {
-      // 计算栋号（从1开始）
-      const buildingNum = Math.floor(i / 5) + 1
+      // 计算栋号（1-3栋循环）
+      const buildingNum = Math.floor(i / camerasPerBuilding) % maxBuildings + 1
+      // 计算该栋楼内的摄像头索引
+      const cameraIndexInBuilding = i % camerasPerBuilding
       // 计算楼层范围（每5层一组）
-      const floorGroupIndex = i % 5
-      const floorStart = floorGroupIndex * 5 + 1
+      const floorStart = cameraIndexInBuilding * 5 + 1
       const floorEnd = floorStart + 4
       
       // 初始状态无报警，报警状态由 updateVideoAlarmStatus() 函数根据实时报警列表动态更新
