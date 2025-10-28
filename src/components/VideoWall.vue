@@ -11,7 +11,13 @@
       <!-- 双击全屏提示（移到最右侧） -->
       <span class="fullscreen-tip">
         <span class="tip-icon">💡</span>
-        双击视频可全屏查看
+        双击视频全屏
+      </span>
+      
+      <!-- 滚轮滑动提示 -->
+      <span class="scroll-tip">
+        <span class="tip-icon">💡</span>
+        可滚轮滑动
       </span>
       
       <!-- 分屏切换按钮 -->
@@ -443,6 +449,32 @@ onUnmounted(() => {
   border-color: rgba(139, 92, 246, 0.6);
   transform: translateY(-1px);
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+/* 滚轮滑动提示 */
+.scroll-tip {
+  margin-right: 20px;
+  padding: 6px 14px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  color: #10b981;
+  font-size: 13px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: pulse-tip 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+  cursor: default;
+  height: 32px;
+}
+
+.scroll-tip:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
 }
 
 .tip-icon {
