@@ -133,13 +133,7 @@
             </div>
             <div class="info-item" v-if="newAlarm?.fullAddress">
               <span class="item-label">🏠</span>
-              <span class="item-value address">{{ newAlarm?.fullAddress }}</span>
-            </div>
-            <div class="info-item" v-if="newAlarm?.coordinates">
-              <span class="item-label">🗺️</span>
-              <span class="item-value coordinates">
-                经度: {{ newAlarm?.coordinates.lng.toFixed(6) }} | 纬度: {{ newAlarm?.coordinates.lat.toFixed(6) }}
-              </span>
+              <span class="item-value">{{ newAlarm?.fullAddress }}</span>
             </div>
             <div class="info-item">
               <span class="item-label">⏰</span>
@@ -1212,17 +1206,6 @@ onUnmounted(() => {
   color: #ffffff;
   line-height: 1.4;
   flex: 1;
-}
-
-.item-value.address {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.item-value.coordinates {
-  color: #64748b;
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
 }
 
 /* 监控视频区域 */

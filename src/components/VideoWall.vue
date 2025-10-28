@@ -8,40 +8,6 @@
         实时视频监控（{{ splitMode }}分屏）
       </span>
       
-      <!-- 分页控制（移到标题栏右侧） -->
-      <div v-if="totalPages > 1" class="pagination-inline">
-        <button 
-          @click="prevPage" 
-          :disabled="currentPage === 1"
-          class="page-btn-inline"
-          title="快捷键: ← 左箭头"
-        >
-          ◀ 上一页
-        </button>
-        
-        <div class="page-info-inline">
-          <span class="page-number">{{ currentPage }}</span>
-          <span class="page-divider">/</span>
-          <span class="page-total">{{ totalPages }}</span>
-          <span class="camera-info">（共 {{ communityVideos.length }} 个摄像头）</span>
-        </div>
-        
-        <button 
-          @click="nextPage" 
-          :disabled="currentPage === totalPages"
-          class="page-btn-inline"
-          title="快捷键: → 右箭头"
-        >
-          下一页 ▶
-        </button>
-      </div>
-      
-      <!-- 翻页提示（仅在有多页时显示） -->
-      <span v-if="totalPages > 1" class="pagination-tip">
-        <span class="tip-icon">💡</span>
-        可用滚轮或方向键翻页
-      </span>
-      
       <!-- 双击全屏提示（移到最右侧） -->
       <span class="fullscreen-tip">
         <span class="tip-icon">💡</span>
@@ -91,7 +57,7 @@
     </div>
 
     <!-- 视频网格 -->
-    <div ref="videoGridRef" class="video-grid" :class="`grid-${splitMode}`">
+    <div class="video-grid" :class="`grid-${splitMode}`">
       <div 
         v-for="(video, index) in displayVideos" 
         :key="index"
@@ -254,43 +220,16 @@ const allVideos = ref([
   { name: 'D小区 5栋(11-15层)', community: 'd', hasAlarm: false, bgColor: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ])
 
-// 当前页码
-const currentPage = ref(1)
-
 // 筛选当前小区的所有监控
 const communityVideos = computed(() => {
   return allVideos.value.filter(video => video.community === selectedCommunity.value)
 })
 
-// 计算总页数
-const totalPages = computed(() => {
-  const total = communityVideos.value.length
-  return Math.ceil(total / splitMode.value)
-})
-
-// 根据选中的小区和当前页码显示对应的视频
+// 显示的视频（直接显示所有当前小区的监控）
 const displayVideos = computed(() => {
   const videos = communityVideos.value
-  const start = (currentPage.value - 1) * splitMode.value
-  const end = start + splitMode.value
-  return videos.slice(start, end)
+  return videos.slice(0, splitMode.value)
 })
-
-// 上一页
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-    console.log(`📄 翻到第 ${currentPage.value} 页`)
-  }
-}
-
-// 下一页
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    console.log(`📄 翻到第 ${currentPage.value} 页`)
-  }
-}
 
 // 选择视频
 const selectVideo = (index) => {
@@ -317,15 +256,11 @@ const closeFullscreen = () => {
 // 监听小区切换
 const handleCommunityChange = (communityId) => {
   selectedCommunity.value = communityId
-  // 切换小区时重置到第一页
-  currentPage.value = 1
 }
 
 // 监听分屏模式切换
 const handleSplitModeChange = (mode) => {
   splitMode.value = mode
-  // 切换分屏模式时重置到第一页
-  currentPage.value = 1
 }
 
 // 更新当前时间
@@ -433,46 +368,6 @@ const useFallbackData = () => {
   // 保持原有的静态摄像头数据（已在 allVideos.ref 中定义）
 }
 
-// 视频网格元素引用
-const videoGridRef = ref(null)
-
-// 滚轮事件防抖
-let wheelTimeout = null
-
-// 滚轮翻页处理
-const handleWheel = (event) => {
-  if (totalPages.value <= 1) return
-  
-  // 防抖处理 - 避免翻页过快
-  if (wheelTimeout) return
-  
-  event.preventDefault()
-  
-  if (event.deltaY > 0) {
-    // 向下滚动 -> 下一页
-    nextPage()
-  } else {
-    // 向上滚动 -> 上一页
-    prevPage()
-  }
-  
-  // 设置防抖延迟（800ms）
-  wheelTimeout = setTimeout(() => {
-    wheelTimeout = null
-  }, 800)
-}
-
-// 键盘翻页处理
-const handleKeyboard = (event) => {
-  if (totalPages.value <= 1) return
-  
-  if (event.key === 'ArrowLeft') {
-    prevPage()
-  } else if (event.key === 'ArrowRight') {
-    nextPage()
-  }
-}
-
 // 组件挂载时加载小区数据
 onMounted(() => {
   // 延迟加载，确保百度地图 API 已加载
@@ -486,29 +381,13 @@ onMounted(() => {
       updateCurrentTime()
     }
   }, 1000)
-  
-  // 添加滚轮事件监听（在视频网格上）
-  if (videoGridRef.value) {
-    videoGridRef.value.addEventListener('wheel', handleWheel, { passive: false })
-  }
-  
-  // 添加键盘事件监听
-  window.addEventListener('keydown', handleKeyboard)
 })
 
-// 组件卸载时清理定时器和事件监听
+// 组件卸载时清理定时器
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
   }
-  
-  // 移除滚轮事件监听
-  if (videoGridRef.value) {
-    videoGridRef.value.removeEventListener('wheel', handleWheel)
-  }
-  
-  // 移除键盘事件监听
-  window.removeEventListener('keydown', handleKeyboard)
 })
 </script>
 
@@ -537,31 +416,6 @@ onUnmounted(() => {
 
 .icon {
   font-size: 24px;
-}
-
-/* 翻页提示 */
-.pagination-tip {
-  padding: 6px 14px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  border-radius: 16px;
-  color: #10b981;
-  font-size: 13px;
-  font-weight: normal;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  transition: all 0.3s ease;
-  animation: pulse 2s ease-in-out infinite;
-  height: 32px;
-}
-
-.pagination-tip:hover {
-  background: rgba(16, 185, 129, 0.25);
-  border-color: rgba(16, 185, 129, 0.6);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 /* 全屏提示 */
@@ -612,78 +466,6 @@ onUnmounted(() => {
   50% {
     filter: brightness(1.5);
   }
-}
-
-/* 内联分页控制（在标题栏中） */
-.pagination-inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: 20px;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(0, 246, 255, 0.2);
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
-  height: 32px;
-}
-
-.page-btn-inline {
-  padding: 6px 12px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
-  border: 1px solid rgba(6, 182, 212, 0.5);
-  color: #00f6ff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.page-btn-inline:hover:not(:disabled) {
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
-  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-  transform: translateY(-2px);
-}
-
-.page-btn-inline:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.page-info-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.page-info-inline .page-number {
-  font-size: 18px;
-  font-weight: bold;
-  color: #00f6ff;
-  text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
-}
-
-.page-info-inline .page-divider {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.page-info-inline .page-total {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.page-info-inline .camera-info {
-  margin-left: 4px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 11px;
 }
 
 /* 控制按钮组 */
