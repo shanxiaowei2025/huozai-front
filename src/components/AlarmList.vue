@@ -175,6 +175,14 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, inject, computed } from 'vue'
 
+// 注入小区数据共享机制
+const communityData = inject('communityData', null)
+
+// 从 VideoWall 共享的小区数据（确保一致性）
+const sharedCommunities = computed(() => {
+  return communityData?.communities?.value || []
+})
+
 // 从百度地图获取的真实地点数据
 const realLocations = ref([])
 const isLoadingLocations = ref(false)
@@ -336,8 +344,24 @@ const generateBuildingInfo = () => {
 
 // 从真实地点生成位置字符串
 const generateLocationFromReal = () => {
-  // 优先使用API获取的真实地点，如果没有则使用备用地点
-  const locations = realLocations.value.length > 0 ? realLocations.value : fallbackLocations
+  // 优先使用从 VideoWall 共享的小区数据，确保报警位置与监控摄像头名称一致
+  let locations = []
+  
+  if (sharedCommunities.value.length > 0) {
+    // 使用共享的小区数据
+    locations = sharedCommunities.value.map(community => ({
+      name: community.name,
+      address: '河北省保定市定兴县',
+      point: { lng: community.lng, lat: community.lat }
+    }))
+    console.log('📍 使用共享的小区数据生成报警位置')
+  } else if (realLocations.value.length > 0) {
+    // 备选：使用自己获取的地点数据
+    locations = realLocations.value
+  } else {
+    // 最后备选：使用备用地点
+    locations = fallbackLocations
+  }
   
   if (locations.length === 0) {
     // 如果还没有加载到任何地点，使用默认位置
@@ -601,6 +625,14 @@ watch(alarms, () => {
     console.log('📍 更新当天报警数据到地图:', todayAlarms.length, '条')
   }
 }, { deep: true, immediate: true })
+
+// 监听共享小区数据变化，更新现有报警的位置信息
+watch(sharedCommunities, (newCommunities) => {
+  if (newCommunities && newCommunities.length > 0) {
+    console.log('📥 收到共享小区数据，更新报警位置信息')
+    updateAlarmsWithRealLocations()
+  }
+}, { immediate: true })
 
 // 组件挂载
 onMounted(() => {

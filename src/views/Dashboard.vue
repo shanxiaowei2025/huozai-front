@@ -104,12 +104,22 @@ let timeInterval = null
 
 // 共享报警数据 - 用于在子组件间传递
 const sharedAlarms = ref([])
+// 共享小区数据 - 用于确保报警列表和视频监控使用相同的小区
+const sharedCommunities = ref([])
 
 // 提供报警数据给子组件
 provide('alarmData', {
   alarms: sharedAlarms,
   updateAlarms: (newAlarms) => {
     sharedAlarms.value = newAlarms
+  }
+})
+
+// 提供小区数据给子组件
+provide('communityData', {
+  communities: sharedCommunities,
+  updateCommunities: (newCommunities) => {
+    sharedCommunities.value = newCommunities
   }
 })
 

@@ -152,6 +152,8 @@ import { searchCommunities, searchNearbyCommunities } from '@/services/baiduMapS
 
 // 注入报警数据
 const alarmData = inject('alarmData', null)
+// 注入小区数据共享机制
+const communityData = inject('communityData', null)
 
 // 分屏模式：9/16/25
 const splitMode = ref(9)
@@ -415,6 +417,12 @@ const loadCommunities = async () => {
       
       console.log('✅ 成功加载定兴县城区小区数据：', result.length, '个小区')
       console.log('📍 搜索范围：城区中心5公里半径内', result)
+      
+      // 共享小区数据给其他组件（如 AlarmList）
+      if (communityData) {
+        communityData.updateCommunities(result)
+        console.log('📤 已共享小区数据给其他组件')
+      }
       
       // 为每个小区生成模拟摄像头数据
       generateCamerasForCommunities(result)
