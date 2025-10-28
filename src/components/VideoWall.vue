@@ -63,7 +63,7 @@
     </div>
 
     <!-- 视频网格 -->
-    <div class="video-grid" :class="`grid-${splitMode}`">
+    <div ref="videoGridRef" class="video-grid" :class="`grid-${splitMode}`">
       <div 
         v-for="(video, index) in displayVideos" 
         :key="index"
@@ -374,6 +374,15 @@ const useFallbackData = () => {
   // 保持原有的静态摄像头数据（已在 allVideos.ref 中定义）
 }
 
+// 视频网格元素引用
+const videoGridRef = ref(null)
+
+// 滚轮滑动处理（用于滚动视频网格）
+const handleWheel = (event) => {
+  // 不阻止默认行为，让它自然滚动
+  // 这样用户可以上下滚动查看更多视频
+}
+
 // 组件挂载时加载小区数据
 onMounted(() => {
   // 延迟加载，确保百度地图 API 已加载
@@ -637,27 +646,48 @@ onUnmounted(() => {
   flex: 1;
   display: grid;
   gap: 12px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 8px;
   min-height: 0; /* 重要：允许flex子项缩小 */
+}
+
+/* 自定义滚动条样式 */
+.video-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.video-grid::-webkit-scrollbar-track {
+  background: rgba(0, 20, 40, 0.3);
+  border-radius: 4px;
+}
+
+.video-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 246, 255, 0.3);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.video-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 246, 255, 0.5);
 }
 
 /* 9分屏：3x3网格 */
 .grid-9 {
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-auto-rows: minmax(200px, 1fr);
 }
 
 /* 16分屏：4x4网格 */
 .grid-16 {
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-auto-rows: minmax(150px, 1fr);
 }
 
 /* 25分屏：5x5网格 */
 .grid-25 {
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-auto-rows: minmax(120px, 1fr);
 }
 
 /* 单个视频项 */
