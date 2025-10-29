@@ -1,0 +1,38 @@
+# 生产环境 Docker Compose 配置
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
+    image: monitoring-dashboard:latest
+    container_name: monitoring-dashboard-prod
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - app-network
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  app-network:
+    driver: bridge
+

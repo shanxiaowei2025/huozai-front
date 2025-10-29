@@ -2,38 +2,111 @@
 
 ## 📦 部署方式
 
-本项目使用多阶段构建 + Nginx 的方式进行 Docker 部署，具有以下优势：
-- 镜像体积小（约 20-30MB）
-- 生产级性能
-- 静态资源高效缓存
-- 支持 Vue Router History 模式
+本项目支持开发和生产两种 Docker 部署模式：
+- **开发模式**：支持热重载，方便本地开发调试
+- **生产模式**：多阶段构建 + Nginx，镜像体积小（约 20-30MB），生产级性能
 
 ## 🚀 快速开始
 
-### 方法一：使用 Docker 命令
+### ⚙️ 环境配置（首次使用必读）
+
+**使用统一的 `docker-compose up -d` 命令启动，通过 `.env` 文件切换环境**
 
 ```bash
-# 1. 构建镜像
-docker build -t monitoring-dashboard:latest .
+# 1. 复制环境配置文件
+cp .env.example .env
 
-# 2. 运行容器
-docker run -d -p 80:80 --name dashboard monitoring-dashboard:latest
-
-# 3. 访问应用
-# 浏览器打开 http://localhost
+# 2. 编辑 .env 文件，选择要启动的环境
+# 开发环境：COMPOSE_FILE=docker-compose.dev.yml
+# 生产环境：COMPOSE_FILE=docker-compose.prod.yml
 ```
 
-### 方法二：使用 Docker Compose（推荐）
+### 🔧 开发环境启动
 
 ```bash
-# 启动服务
+# 1. 确保 .env 文件中设置为开发模式
+# COMPOSE_FILE=docker-compose.dev.yml
+
+# 2. 启动服务（统一命令）
 docker-compose up -d
 
-# 查看日志
+# 3. 查看日志
 docker-compose logs -f
 
-# 停止服务
+# 4. 访问应用
+# 浏览器打开 http://localhost:5173
+
+# 5. 停止服务
 docker-compose down
+```
+
+**开发环境特性：**
+- ✅ 支持热重载，修改代码自动刷新
+- ✅ 源码目录挂载到容器
+- ✅ 使用 Vite 开发服务器
+- ✅ 端口：5173
+
+### 🚀 生产环境启动
+
+```bash
+# 1. 确保 .env 文件中设置为生产模式
+# COMPOSE_FILE=docker-compose.prod.yml
+
+# 2. 启动服务（统一命令）
+docker-compose up -d
+
+# 3. 查看日志
+docker-compose logs -f
+
+# 4. 访问应用
+# 浏览器打开 http://localhost:3000
+
+# 5. 停止服务
+docker-compose down
+```
+
+**生产环境特性：**
+- ✅ 多阶段构建，镜像体积小
+- ✅ Nginx 静态文件服务
+- ✅ 资源限制和日志管理
+- ✅ 端口：3000 (映射到容器的 80)
+
+## 🔄 环境切换
+
+### 快速切换开发/生产环境
+
+**方法一：修改 .env 文件（推荐）**
+
+```bash
+# 切换到开发环境
+# 编辑 .env 文件，设置：
+# COMPOSE_FILE=docker-compose.dev.yml
+
+# 切换到生产环境
+# 编辑 .env 文件，设置：
+# COMPOSE_FILE=docker-compose.prod.yml
+
+# 重启服务使配置生效
+docker-compose down
+docker-compose up -d
+```
+
+**方法二：使用命令行覆盖**
+
+```bash
+# 临时使用开发环境（不修改 .env 文件）
+docker-compose -f docker-compose.dev.yml up -d
+
+# 临时使用生产环境（不修改 .env 文件）
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**方法三：使用环境变量**
+
+```bash
+# 临时指定配置文件
+COMPOSE_FILE=docker-compose.dev.yml docker-compose up -d
+COMPOSE_FILE=docker-compose.prod.yml docker-compose up -d
 ```
 
 ## 📋 常用命令
@@ -44,21 +117,21 @@ docker-compose down
 # 查看运行中的容器
 docker ps
 
-# 查看容器日志
-docker logs dashboard
-docker logs -f dashboard  # 实时查看
+# 查看容器日志（开发环境）
+docker-compose logs -f
 
-# 停止容器
-docker stop dashboard
+# 查看容器日志（生产环境）
+docker logs monitoring-dashboard-prod
+docker logs -f monitoring-dashboard-prod  # 实时查看
 
-# 启动容器
-docker start dashboard
+# 停止服务
+docker-compose down
 
-# 重启容器
-docker restart dashboard
+# 重启服务
+docker-compose restart
 
-# 删除容器
-docker rm dashboard
+# 重新构建并启动
+docker-compose up -d --build
 ```
 
 ### 镜像管理
@@ -242,6 +315,8 @@ docker build --no-cache -t monitoring-dashboard:latest .
 
 ## 🔄 更新部署
 
+### 使用 Docker Compose（推荐）
+
 ```bash
 # 1. 拉取最新代码
 git pull
@@ -249,15 +324,24 @@ git pull
 # 2. 停止并删除旧容器
 docker-compose down
 
-# 3. 重新构建并启动
+# 3. 重新构建并启动（会自动读取 .env 中的配置）
 docker-compose up -d --build
+```
 
-# 或者使用 Docker 命令
-docker stop dashboard
-docker rm dashboard
-docker rmi monitoring-dashboard:latest
-docker build -t monitoring-dashboard:latest .
-docker run -d -p 80:80 --name dashboard monitoring-dashboard:latest
+### 开发环境热重载
+
+开发环境下，由于源码已挂载，大部分代码修改会自动生效，无需重启。
+只有以下情况需要重新构建：
+- 修改了 `package.json`（新增依赖）
+- 修改了 `Dockerfile.dev`
+- 修改了 `docker-compose.dev.yml`
+
+```bash
+# 重新安装依赖（如果修改了 package.json）
+docker-compose exec frontend-dev npm install
+
+# 或者重新构建
+docker-compose up -d --build
 ```
 
 ## 📚 相关文档

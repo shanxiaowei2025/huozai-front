@@ -1,0 +1,30 @@
+# 开发环境 Docker Compose 配置
+
+services:
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: monitoring-dashboard-dev
+    ports:
+      - "5173:5173"  # Vite 默认端口
+    volumes:
+      # 挂载源码目录，实现热重载
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+      - ./vite.config.js:/app/vite.config.js
+      - ./package.json:/app/package.json
+      # 排除 node_modules，使用容器内的
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8080
+    restart: unless-stopped
+    networks:
+      - app-network
+    command: npm run dev -- --host 0.0.0.0
+
+networks:
+  app-network:
+    driver: bridge
+
