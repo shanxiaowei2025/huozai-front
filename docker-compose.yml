@@ -1,5 +1,5 @@
 # Docker Compose 生产环境配置
-# 开发环境请直接使用：npm run dev
+# 开发环境请直接使用：pnpm dev
 
 services:
   frontend:
