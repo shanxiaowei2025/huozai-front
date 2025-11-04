@@ -1,4 +1,5 @@
-# 生产环境 Docker Compose 配置
+# Docker Compose 生产环境配置
+# 开发环境请直接使用：npm run dev
 
 services:
   frontend:
@@ -8,9 +9,9 @@ services:
       args:
         - NODE_ENV=production
     image: monitoring-dashboard:latest
-    container_name: monitoring-dashboard-prod
+    container_name: monitoring-dashboard
     ports:
-      - "3000:80"
+      - "5173:80"  # 生产环境端口映射（与开发环境保持一致）
     environment:
       - NODE_ENV=production
     restart: always

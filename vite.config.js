@@ -17,7 +17,7 @@ export default defineConfig({
   
   // 服务器配置
   server: {
-    port: 3000,        // 开发服务器端口号
+    port: 5173,        // 开发服务器端口号（Vite 默认端口）
     open: false,       // 启动时自动打开浏览器（macOS上可能有兼容性问题，建议手动打开）
     host: '0.0.0.0',   // 允许局域网访问
     allowedHosts: [    // 允许的域名列表
